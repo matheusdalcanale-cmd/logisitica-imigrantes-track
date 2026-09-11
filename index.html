@@ -5,236 +5,170 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogiTrack Pro - Gestão Logística</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen antialiased">
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex overflow-hidden">
 
-    <!-- TELA DE LOGIN / AUTENTICAÇÃO -->
-    <div id="auth-screen" class="fixed inset-0 bg-slate-950 flex items-center justify-center z-50 p-4">
-        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600/20 text-blue-400 text-2xl mb-4">
-                    <i class="fa-solid fa-boxes-stacked"></i>
-                </div>
-                <h1 class="text-2xl font-bold tracking-tight">LogiTrack Pro</h1>
-                <p class="text-slate-400 text-sm mt-1">Gestão Inteligente de Importação & Exportação</p>
-            </div>
-
-            <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4">
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center text-blue-600"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h2>
+            <form id="login-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">E-mail</label>
-                    <input type="email" id="auth-email" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700">E-mail</label>
+                    <input type="email" id="auth-email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Senha (mínimo 6 caracteres)</label>
-                    <input type="password" id="auth-password" required minlength="6" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                    <label class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" id="auth-password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
                 </div>
-                <button type="submit" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg transition-colors text-sm">
-                    Entrar no Sistema
-                </button>
+                <div class="text-red-500 text-sm hidden" id="auth-error"></div>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">Entrar / Cadastrar</button>
+                <p class="text-xs text-gray-500 text-center mt-4">Se o e-mail não existir, uma nova conta será criada automaticamente.</p>
             </form>
-
-            <div class="text-center mt-6">
-                <button onclick="toggleAuthMode()" type="button" id="auth-toggle-btn" class="text-xs text-blue-400 hover:underline">
-                    Não tem uma conta? Crie uma agora
-                </button>
-            </div>
-            <div id="auth-error" class="mt-4 text-center text-xs text-red-400 hidden"></div>
         </div>
     </div>
 
-    <!-- APLICAÇÃO PRINCIPAL -->
-    <div id="app-screen" class="hidden flex h-screen overflow-hidden">
+    <!-- SIDEBAR / FORMULÁRIO DE CRIAÇÃO -->
+    <aside class="w-80 bg-white shadow-xl flex flex-col h-full border-r border-gray-200 hidden" id="sidebar">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-600 text-white">
+            <h1 class="text-xl font-bold"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h1>
+            <button id="btn-logout" class="text-white hover:text-gray-200 text-sm"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
         
-        <!-- SIDEBAR DE CADASTRO -->
-        <aside class="w-96 bg-slate-950 border-r border-slate-800 flex flex-col z-10">
-            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
-                        <i class="fa-solid fa-route"></i>
+        <div class="p-6 overflow-y-auto flex-1">
+            <h2 class="text-lg font-bold mb-4 text-gray-700">Novo Processo</h2>
+            
+            <div class="flex gap-2 mb-6">
+                <button id="btn-type-import" class="flex-1 py-2 text-sm font-semibold rounded bg-blue-100 text-blue-700 border border-blue-300 transition">Importação</button>
+                <button id="btn-type-export" class="flex-1 py-2 text-sm font-semibold rounded bg-gray-100 text-gray-600 border border-gray-300 transition">Exportação</button>
+            </div>
+
+            <form id="process-form" class="space-y-4">
+                <input type="hidden" id="process-type" value="import">
+                
+                <!-- Campos Comuns -->
+                <div id="fields-common">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Armador</label>
+                    <input type="text" id="f-armador" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white" required>
+                </div>
+
+                <!-- Campos Importação -->
+                <div id="fields-import" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Importador</label>
+                        <input type="text" id="f-importador" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
                     </div>
                     <div>
-                        <h2 class="font-bold text-sm">Painel Operacional</h2>
-                        <span id="user-display-email" class="text-xs text-slate-400 truncate block w-48"></span>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">DI / DTA / DUIMP</label>
+                        <input type="text" id="f-documento" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Terminal de Carregamento</label>
+                        <input type="text" id="f-term-carga" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Terminal de Vazio</label>
+                        <input type="text" id="f-term-vazio" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
                     </div>
                 </div>
-                <button onclick="logout()" title="Sair" class="text-slate-400 hover:text-red-400 transition-colors p-2">
-                    <i class="fa-solid fa-power-off"></i>
-                </button>
-            </div>
 
-            <!-- TIPO DE OPERAÇÃO -->
-            <div class="p-4 border-b border-slate-800 bg-slate-900/50">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Tipo de Operação</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="switchOperationType('import')" id="btn-type-import" class="py-2 px-3 rounded-lg text-xs font-medium bg-blue-600 text-white transition-colors">
-                        Importação
-                    </button>
-                    <button type="button" onclick="switchOperationType('export')" id="btn-type-export" class="py-2 px-3 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
-                        Exportação
-                    </button>
-                </div>
-            </div>
-
-            <!-- FORMULÁRIO -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                <form id="process-form" onsubmit="saveProcess(event)" class="space-y-3.5">
-                    
-                    <!-- CAMPOS IMPORTAÇÃO -->
-                    <div id="fields-import" class="space-y-3.5">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Importador</label>
-                            <input type="text" id="imp-importador" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Nº DI / DTA / DUIMP</label>
-                            <input type="text" id="imp-doc" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Armador</label>
-                            <input type="text" id="imp-armador" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Terminal Carga</label>
-                                <input type="text" id="imp-term-carga" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Terminal Vazio</label>
-                                <input type="text" id="imp-term-vazio" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                            </div>
-                        </div>
+                <!-- Campos Exportação -->
+                <div id="fields-export" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Exportador</label>
+                        <input type="text" id="f-exportador" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
                     </div>
-
-                    <!-- CAMPOS EXPORTAÇÃO -->
-                    <div id="fields-export" class="space-y-3.5 hidden">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Exportador</label>
-                            <input type="text" id="exp-exportador" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Referência do Processo</label>
-                            <input type="text" id="exp-ref" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Armador</label>
-                                <input type="text" id="exp-armador" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Nº Booking</label>
-                                <input type="text" id="exp-booking" required class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Nome do Navio</label>
-                            <input type="text" id="exp-navio" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Deadline Draft</label>
-                                <input type="datetime-local" id="exp-dl-draft" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-[11px] text-slate-300 focus:outline-none focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Deadline Carga</label>
-                                <input type="datetime-local" id="exp-dl-carga" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-2 text-[11px] text-slate-300 focus:outline-none focus:border-blue-500">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Retirada Vazio (Terminal / Agend.)</label>
-                                <input type="text" id="exp-term-vazio-nome" placeholder="Terminal" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs mb-1 focus:outline-none focus:border-blue-500">
-                                <input type="datetime-local" id="exp-term-vazio-agenda" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300 focus:outline-none focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-300 mb-1">Depósito Cheio (Terminal / Agend.)</label>
-                                <input type="text" id="exp-term-cheio-nome" placeholder="Terminal" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-xs mb-1 focus:outline-none focus:border-blue-500">
-                                <input type="datetime-local" id="exp-term-cheio-agenda" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300 focus:outline-none focus:border-blue-500">
-                            </div>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Referência do Processo</label>
+                        <input type="text" id="f-referencia" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
                     </div>
-
-                    <!-- CONTÊINERES DINÂMICOS (Apenas visível se for Importação) -->
-                    <div id="container-section-wrapper" class="border-t border-slate-800 pt-3">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Contêineres</label>
-                            <button type="button" onclick="addContainerField()" class="text-xs text-blue-400 hover:underline"><i class="fa-solid fa-plus mr-1"></i>Adicionar</button>
-                        </div>
-                        <div id="containers-container" class="space-y-2">
-                            <div class="container-row bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-2">
-                                <div class="flex gap-2">
-                                    <input type="text" placeholder="Nº Contêiner" class="container-num flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs uppercase">
-                                    <select class="container-tipo w-24 bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs">
-                                        <option value="20DRY">20DRY</option>
-                                        <option value="40HC">40HC</option>
-                                        <option value="40DRY">40DRY</option>
-                                        <option value="40OT">40OT</option>
-                                    </select>
-                                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-slate-500 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                                <div class="container-export-extras hidden grid grid-cols-2 gap-2">
-                                    <input type="text" placeholder="Tara (kg)" class="container-tara bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs">
-                                    <input type="text" placeholder="Lacre" class="container-lacre bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs">
-                                </div>
-                            </div>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Número do Booking</label>
+                        <input type="text" id="f-booking" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nome do Navio</label>
+                        <input type="text" id="f-navio" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                    </div>
+                </div>
 
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg transition-colors text-xs shadow-lg mt-2">
-                        <i class="fa-solid fa-check mr-1.5"></i> Cadastrar Processo
-                    </button>
-                </form>
+                <div class="border-t pt-4 mt-4">
+                    <h3 class="text-sm font-bold text-gray-700 mb-2 flex justify-between items-center">
+                        Contêineres
+                        <button type="button" id="btn-add-container" class="text-blue-600 hover:text-blue-800 text-xs"><i class="fas fa-plus"></i> Adicionar</button>
+                    </h3>
+                    <div id="container-list" class="space-y-3">
+                        <!-- Containers inseridos dinamicamente -->
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded mt-6 hover:bg-green-700 shadow-md">Criar Processo</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- PAINEL PRINCIPAL -->
+    <main class="flex-1 flex flex-col h-full bg-gray-50 hidden" id="main-panel">
+        <header class="bg-white shadow-sm border-b px-8 py-4 flex items-center justify-between">
+            <div class="flex gap-4">
+                <button id="tab-import" class="px-4 py-2 font-bold text-blue-700 border-b-2 border-blue-700">Importações Ativas</button>
+                <button id="tab-export" class="px-4 py-2 font-bold text-gray-500 hover:text-blue-700">Exportações Ativas</button>
+                <button id="tab-archive" class="px-4 py-2 font-bold text-gray-500 hover:text-blue-700">Arquivados</button>
             </div>
-        </aside>
+            <div class="text-sm text-gray-500" id="user-display"></div>
+        </header>
 
-        <!-- CONTEÚDO PRINCIPAL -->
-        <main class="flex-1 flex flex-col bg-slate-900 overflow-hidden">
-            <!-- HEADER DE ABAS -->
-            <header class="h-16 border-b border-slate-800 px-6 flex items-center justify-between bg-slate-950">
-                <div class="flex items-center gap-3">
-                    <button onclick="switchTab('import')" id="tab-btn-import" class="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white transition-colors">
-                        <i class="fa-solid fa-ship mr-2"></i> Importações Ativas
-                    </button>
-                    <button onclick="switchTab('export')" id="tab-btn-export" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
-                        <i class="fa-solid fa-plane-departure mr-2"></i> Exportações Ativas
-                    </button>
-                    <button onclick="switchTab('archived')" id="tab-btn-archived" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors">
-                        <i class="fa-solid fa-box-archive mr-2"></i> Arquivados
-                    </button>
-                </div>
-                <div class="text-xs text-slate-400">
-                    Sistema Operacional Logístico
-                </div>
-            </header>
-
-            <!-- PAINEL DOS CARDS -->
-            <div class="flex-1 overflow-y-auto p-6">
-                <div id="process-list" class="space-y-3">
-                    <!-- Cards injetados via JS -->
-                </div>
+        <div class="flex-1 p-8 overflow-y-auto">
+            <div id="processes-container" class="space-y-3">
+                <!-- Cartões de processos -->
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
     <!-- MODAL DE DETALHES -->
-    <div id="details-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
-                <h3 id="modal-title" class="font-bold text-sm">Detalhes do Processo</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2"><i class="fa-solid fa-xmark"></i></button>
+    <div id="process-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="bg-gray-100 p-4 border-b flex justify-between items-start">
+                <div>
+                    <div class="flex gap-2 items-center mb-1">
+                        <span id="m-type-badge" class="px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-800 uppercase"></span>
+                        <h2 id="m-title" class="text-xl font-bold text-gray-800"></h2>
+                    </div>
+                    <p id="m-subtitle" class="text-sm text-gray-600"></p>
+                </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
             </div>
-            <div id="modal-content" class="p-6 overflow-y-auto flex-1 space-y-6">
-                <!-- Conteúdo detalhado injetado via JS -->
+            
+            <!-- Alerta Embraport -->
+            <div id="m-embraport-alert" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0"><i class="fas fa-exclamation-triangle text-yellow-400"></i></div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700 font-bold">Atenção: Operação Embraport detectada.</p>
+                        <p class="text-xs text-yellow-600">Janelas para DTA liberadas com 24h a no máximo 48h de antecedência. Monitore o agendamento.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 bg-gray-50" id="m-containers-area">
+                <!-- Conteúdo gerado dinamicamente -->
+            </div>
+
+            <div class="p-4 border-t bg-white flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded">Fechar</button>
+                <button id="btn-archive-process" class="px-6 py-2 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 hidden">Arquivar Processo</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT DE CONFIGURAÇÃO E NEGÓCIO -->
+    <!-- Firebase SDKs e Lógica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        // CONFIGURAÇÃO DO FIREBASE (SUAS CREDENCIAIS)
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURAÇÃO DO FIREBASE FORNECIDA
         const firebaseConfig = {
             apiKey: "AIzaSyAKGjOftcyDZ-5yPA-5NK55GohtGlrfbeQ",
             authDomain: "track-logistica.firebaseapp.com",
@@ -247,495 +181,418 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let unsubscribeProcesses = null;
 
         let currentUser = null;
-        let activeTab = 'import';
-        let operationType = 'import';
+        let currentActiveTab = 'import'; // import, export, archive
         let processes = [];
-        let currentModalProcessId = null;
-        let isSignUpMode = false;
+        let currentViewingProcessId = null;
 
-        function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
+        // ELEMENTOS UI
+        const loginScreen = document.getElementById('login-screen');
+        const sidebar = document.getElementById('sidebar');
+        const mainPanel = document.getElementById('main-panel');
+        
+        // CHECKLIST ORDER (Conforme solicitado)
+        const importChecklistSteps = [
+            { id: 'ag_carga', label: 'Agendamento de Carregamento', type: 'datetime' },
+            { id: 'ag_vazio', label: 'Agendamento de Vazio', type: 'datetime' },
+            { id: 'gerar_cte', label: 'Gerar CTE', type: 'checkbox' },
+            { id: 'gerar_ciot', label: 'Gerar CIOT', type: 'checkbox' },
+            { id: 'gerar_mdfe', label: 'Gerar MDFE', type: 'checkbox' },
+            { id: 'encerrar_mdfe', label: 'Encerrar MDFE', type: 'checkbox' }
+        ];
 
-        window.toggleAuthMode = function() {
-            isSignUpMode = !isSignUpMode;
-            const btn = document.getElementById('auth-btn');
-            const toggleBtn = document.getElementById('auth-toggle-btn');
-            if (isSignUpMode) {
-                btn.innerText = "Criar Conta";
-                toggleBtn.innerText = "Já tem uma conta? Faça login";
-            } else {
-                btn.innerText = "Entrar no Sistema";
-                toggleBtn.innerText = "Não tem uma conta? Crie uma agora";
-            }
-        };
-
-        window.handleAuth = async function(e) {
-            e.preventDefault();
-            const email = document.getElementById('auth-email').value;
-            const pass = document.getElementById('auth-password').value;
-            const errDiv = document.getElementById('auth-error');
-            errDiv.classList.add('hidden');
-
-            const btn = document.getElementById('auth-btn');
-            btn.disabled = true;
-            btn.classList.add('opacity-60', 'cursor-not-allowed');
-
-            try {
-                if (isSignUpMode) {
-                    await createUserWithEmailAndPassword(auth, email, pass);
-                } else {
-                    await signInWithEmailAndPassword(auth, email, pass);
-                }
-            } catch (err) {
-                const messages = {
-                    'auth/invalid-credential': 'E-mail ou senha incorretos.',
-                    'auth/email-already-in-use': 'Este e-mail já possui uma conta.',
-                    'auth/invalid-email': 'Informe um e-mail válido.',
-                    'auth/weak-password': 'A senha precisa ter pelo menos 6 caracteres.',
-                    'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco e tente novamente.'
-                };
-                errDiv.innerText = messages[err.code] || 'Não foi possível concluir a autenticação.';
-                errDiv.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-60', 'cursor-not-allowed');
-            }
-        };
-
-        window.logout = function() {
-            if (unsubscribeProcesses) {
-                unsubscribeProcesses();
-                unsubscribeProcesses = null;
-            }
-            signOut(auth);
-        };
-
+        // AUTENTICAÇÃO
         onAuthStateChanged(auth, (user) => {
-            currentUser = user;
             if (user) {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                document.getElementById('user-display-email').innerText = user.email;
+                currentUser = user;
+                loginScreen.classList.add('hidden');
+                sidebar.classList.remove('hidden');
+                mainPanel.classList.remove('hidden');
+                document.getElementById('user-display').innerText = user.email;
                 loadProcesses();
             } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('app-screen').classList.add('hidden');
+                currentUser = null;
+                loginScreen.classList.remove('hidden');
+                sidebar.classList.add('hidden');
+                mainPanel.classList.add('hidden');
             }
         });
 
-        window.switchOperationType = function(type) {
-            operationType = type;
-            const btnImp = document.getElementById('btn-type-import');
-            const btnExp = document.getElementById('btn-type-export');
-            const fieldsImp = document.getElementById('fields-import');
-            const fieldsExp = document.getElementById('fields-export');
-            const containerWrapper = document.getElementById('container-section-wrapper');
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value; // Valor lido sem restrições
+            const errorDiv = document.getElementById('auth-error');
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                errorDiv.classList.add('hidden');
+            } catch (error) {
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        errorDiv.classList.add('hidden');
+                    } catch (createError) {
+                        errorDiv.innerText = "Erro ao criar conta: " + createError.message;
+                        errorDiv.classList.remove('hidden');
+                    }
+                } else {
+                    errorDiv.innerText = "Erro no login: " + error.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            }
+        });
 
-            const containerRows = document.querySelectorAll('.container-row');
+        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+        // ALTERNAR ABAS E TIPOS
+        const setFormType = (type) => {
+            document.getElementById('process-type').value = type;
+            const btnImport = document.getElementById('btn-type-import');
+            const btnExport = document.getElementById('btn-type-export');
+            const fImport = document.getElementById('fields-import');
+            const fExport = document.getElementById('fields-export');
+            
+            document.getElementById('container-list').innerHTML = '';
+            addContainerField(type);
+
             if (type === 'import') {
-                btnImp.className = "py-2 px-3 rounded-lg text-xs font-medium bg-blue-600 text-white transition-colors";
-                btnExp.className = "py-2 px-3 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors";
-                fieldsImp.classList.remove('hidden');
-                fieldsExp.classList.add('hidden');
-                containerWrapper.classList.remove('hidden');
-                containerRows.forEach(row => row.querySelector('.container-num')?.setAttribute('required', 'required'));
+                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-blue-100 text-blue-700 border border-blue-300 transition';
+                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-gray-100 text-gray-600 border border-gray-300 transition';
+                fImport.classList.remove('hidden');
+                fExport.classList.add('hidden');
             } else {
-                btnExp.className = "py-2 px-3 rounded-lg text-xs font-medium bg-blue-600 text-white transition-colors";
-                btnImp.className = "py-2 px-3 rounded-lg text-xs font-medium bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors";
-                fieldsExp.classList.remove('hidden');
-                fieldsImp.classList.add('hidden');
-                containerWrapper.classList.add('hidden');
-                containerRows.forEach(row => row.querySelector('.container-num')?.removeAttribute('required'));
+                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-blue-100 text-blue-700 border border-blue-300 transition';
+                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-gray-100 text-gray-600 border border-gray-300 transition';
+                fExport.classList.remove('hidden');
+                fImport.classList.add('hidden');
             }
         };
 
-        window.switchTab = function(tab) {
-            activeTab = tab;
-            ['import', 'export', 'archived'].forEach(t => {
-                const btn = document.getElementById(`tab-btn-${t}`);
-                if (t === tab) {
-                    btn.className = "px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white transition-colors";
-                } else {
-                    btn.className = "px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors";
-                }
-            });
+        document.getElementById('btn-type-import').addEventListener('click', () => setFormType('import'));
+        document.getElementById('btn-type-export').addEventListener('click', () => setFormType('export'));
+
+        const setMainTab = (tab) => {
+            currentActiveTab = tab;
+            const tabs = {
+                'import': document.getElementById('tab-import'),
+                'export': document.getElementById('tab-export'),
+                'archive': document.getElementById('tab-archive')
+            };
+            
+            Object.values(tabs).forEach(t => t.className = 'px-4 py-2 font-bold text-gray-500 hover:text-blue-700');
+            if(tab === 'archive') {
+                tabs[tab].className = 'px-4 py-2 font-bold text-green-700 border-b-2 border-green-700';
+            } else {
+                tabs[tab].className = 'px-4 py-2 font-bold text-blue-700 border-b-2 border-blue-700';
+            }
             renderProcesses();
         };
 
-        window.addContainerField = function() {
-            const container = document.getElementById('containers-container');
+        document.getElementById('tab-import').addEventListener('click', () => setMainTab('import'));
+        document.getElementById('tab-export').addEventListener('click', () => setMainTab('export'));
+        document.getElementById('tab-archive').addEventListener('click', () => setMainTab('archive'));
+
+        // GESTÃO DE CONTAINERS NO FORMULÁRIO
+        let containerCount = 0;
+        const addContainerField = (type = document.getElementById('process-type').value) => {
+            containerCount++;
             const div = document.createElement('div');
-            div.className = "container-row bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-2";
-            div.innerHTML = `
-                <div class="flex gap-2">
-                    <input type="text" placeholder="Nº Contêiner" class="container-num flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs uppercase" ${operationType === 'import' ? 'required' : ''}>
-                    <select class="container-tipo w-24 bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs">
-                        <option value="20DRY">20DRY</option>
-                        <option value="40HC">40HC</option>
-                        <option value="40DRY">40DRY</option>
-                        <option value="40OT">40OT</option>
-                    </select>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-slate-500 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
+            div.className = 'bg-gray-100 p-3 rounded border border-gray-200 relative';
+            div.id = `ct-form-${containerCount}`;
+            
+            let html = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-gray-600">Contêiner ${containerCount}</span>
+                    ${containerCount > 1 ? `<button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
-                <div class="container-export-extras ${operationType === 'export' ? '' : 'hidden'} grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="Tara (kg)" class="container-tara bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs">
-                    <input type="text" placeholder="Lacre" class="container-lacre bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs">
-                </div>
-            `;
-            container.appendChild(div);
-        };
-
-        window.saveProcess = async function(e) {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const containers = [];
-            if (operationType === 'import') {
-                const containerRows = document.querySelectorAll('.container-row');
-                containerRows.forEach(row => {
-                    const num = row.querySelector('.container-num').value.trim();
-                    const tipo = row.querySelector('.container-tipo').value;
-                    if (num) {
-                        containers.push({
-                            num,
-                            tipo,
-                            tara: '',
-                            lacre: '',
-                            checklist: {
-                                carregamento: { done: false, data: '' },
-                                vazio: { done: false, data: '' },
-                                cte: { done: false },
-                                ciot: { done: false },
-                                mdfe: { done: false },
-                                encerrarMdfe: { done: false }
-                            }
-                        });
-                    }
-                });
-
-                if (containers.length === 0) {
-                    alert('Adicione pelo menos um contêiner para a importação.');
-                    return;
-                }
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border rounded" required>
+                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border rounded" required>
+                </div>`;
+                
+            if(type === 'export') {
+                html += `
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder="Tara" class="ct-tara w-full p-2 text-xs border rounded">
+                    <input type="text" placeholder="Lacre" class="ct-lacre w-full p-2 text-xs border rounded">
+                </div>`;
             }
+            
+            div.innerHTML = html;
+            document.getElementById('container-list').appendChild(div);
+        };
+        
+        document.getElementById('btn-add-container').addEventListener('click', () => addContainerField());
+        addContainerField('import'); // Init
 
-            let newProcess = {
+        // SALVAR NOVO PROCESSO
+        document.getElementById('process-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const type = document.getElementById('process-type').value;
+            
+            let processData = {
                 userId: currentUser.uid,
-                type: operationType,
-                archived: false,
-                createdAt: serverTimestamp(),
-                containers
+                type: type,
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                armador: document.getElementById('f-armador').value,
+                containers: []
             };
 
-            if (operationType === 'import') {
-                newProcess.importador = document.getElementById('imp-importador').value.trim();
-                newProcess.doc = document.getElementById('imp-doc').value.trim();
-                newProcess.armador = document.getElementById('imp-armador').value.trim();
-                newProcess.termCarga = document.getElementById('imp-term-carga').value.trim();
-                newProcess.termVazio = document.getElementById('imp-term-vazio').value.trim();
+            if (type === 'import') {
+                processData.importador = document.getElementById('f-importador').value;
+                processData.documento = document.getElementById('f-documento').value;
+                processData.termCarga = document.getElementById('f-term-carga').value;
+                processData.termVazio = document.getElementById('f-term-vazio').value;
             } else {
-                newProcess.exportador = document.getElementById('exp-exportador').value.trim();
-                newProcess.ref = document.getElementById('exp-ref').value.trim();
-                newProcess.armador = document.getElementById('exp-armador').value.trim();
-                newProcess.booking = document.getElementById('exp-booking').value.trim();
-                newProcess.navio = document.getElementById('exp-navio').value.trim();
-                newProcess.dlDraft = document.getElementById('exp-dl-draft').value;
-                newProcess.dlCarga = document.getElementById('exp-dl-carga').value;
-                newProcess.termVazioNome = document.getElementById('exp-term-vazio-nome').value.trim();
-                newProcess.termVazioAgenda = document.getElementById('exp-term-vazio-agenda').value;
-                newProcess.termCheioNome = document.getElementById('exp-term-cheio-nome').value.trim();
-                newProcess.termCheioAgenda = document.getElementById('exp-term-cheio-agenda').value;
+                processData.exportador = document.getElementById('f-exportador').value;
+                processData.referencia = document.getElementById('f-referencia').value;
+                processData.booking = document.getElementById('f-booking').value;
+                processData.navio = document.getElementById('f-navio').value;
             }
+
+            const ctForms = document.querySelectorAll('#container-list > div');
+            ctForms.forEach((ctDiv, index) => {
+                let ct = {
+                    id: `c_${Date.now()}_${index}`,
+                    numero: ctDiv.querySelector('.ct-num').value,
+                    tipo: ctDiv.querySelector('.ct-tipo').value,
+                    checklist: {} 
+                };
+                
+                if (type === 'import') {
+                    importChecklistSteps.forEach(step => ct.checklist[step.id] = '');
+                } else {
+                    ct.tara = ctDiv.querySelector('.ct-tara').value;
+                    ct.lacre = ctDiv.querySelector('.ct-lacre').value;
+                    ct.deadlineDraft = '';
+                    ct.deadlineCarga = '';
+                    ct.agVazio = '';
+                    ct.termVazioExp = '';
+                    ct.agCheio = '';
+                    ct.termCheioExp = '';
+                }
+                processData.containers.push(ct);
+            });
 
             try {
-                await addDoc(collection(db, "processes"), newProcess);
+                const docRef = await addDoc(collection(db, "processes"), processData);
                 document.getElementById('process-form').reset();
-                loadProcesses();
-            } catch (err) {
-                alert("Erro ao salvar processo: " + err.message);
+                document.getElementById('container-list').innerHTML = '';
+                containerCount = 0;
+                addContainerField(type);
+                setMainTab(type);
+            } catch (error) {
+                console.error("Erro ao salvar:", error);
+                alert("Erro ao criar processo.");
             }
-        };
+        });
 
-        function loadProcesses() {
-            if (!currentUser) return;
-            if (unsubscribeProcesses) unsubscribeProcesses();
-
+        // LER DO FIREBASE
+        const loadProcesses = () => {
             const q = query(collection(db, "processes"), where("userId", "==", currentUser.uid));
-            unsubscribeProcesses = onSnapshot(q, (querySnapshot) => {
+            onSnapshot(q, (snapshot) => {
                 processes = [];
-                querySnapshot.forEach((docSnap) => {
-                    processes.push({ id: docSnap.id, ...docSnap.data() });
+                snapshot.forEach((doc) => {
+                    processes.push({ id: doc.id, ...doc.data() });
                 });
                 renderProcesses();
-                if (currentModalProcessId) openModal(currentModalProcessId);
-            }, (err) => {
-                console.error("Erro ao carregar processos:", err);
+                
+                if(currentViewingProcessId) {
+                    const updatedData = processes.find(p => p.id === currentViewingProcessId);
+                    if(updatedData) openModal(currentViewingProcessId);
+                }
             });
-        }
+        };
 
-        window.renderProcesses = function() {
-            const listContainer = document.getElementById('process-list');
-            listContainer.innerHTML = '';
-
-            const filtered = processes.filter(p => {
-                if (activeTab === 'archived') return p.archived;
-                if (activeTab === 'import') return !p.archived && p.type === 'import';
-                if (activeTab === 'export') return !p.archived && p.type === 'export';
+        // RENDERIZAR CARTÕES
+        const renderProcesses = () => {
+            const container = document.getElementById('processes-container');
+            container.innerHTML = '';
+            
+            let filtered = processes.filter(p => {
+                if(currentActiveTab === 'archive') return p.status === 'archived';
+                if(currentActiveTab === 'import') return p.status === 'active' && p.type === 'import';
+                if(currentActiveTab === 'export') return p.status === 'active' && p.type === 'export';
                 return false;
             });
 
-            if (filtered.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-16 text-slate-500 text-xs">
-                        Nenhum processo encontrado nesta categoria.
-                    </div>
-                `;
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="text-center p-8 text-gray-400">Nenhum processo encontrado nesta categoria.</div>`;
                 return;
             }
 
-            filtered.forEach(p => {
-                const isImport = p.type === 'import';
-                const title = isImport ? `DI/DTA/DUIMP: ${p.doc}` : `Booking: ${p.booking} (Ref: ${p.ref})`;
-                const client = isImport ? p.importador : p.exportador;
-                const loadTerm = isImport ? p.termCarga : p.termCheioNome;
-                const isEmbraport = loadTerm && loadTerm.toLowerCase().includes('embraport');
+            filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(proc => {
+                const title = proc.type === 'import' ? proc.importador : proc.exportador;
+                const docRef = proc.type === 'import' ? proc.documento : proc.booking;
+                const badges = proc.containers.map(c => `<span class="bg-gray-200 text-xs px-2 py-1 rounded">${c.numero}</span>`).join(' ');
 
-                let totalTasks = 0;
-                let completedTasks = 0;
-                p.containers.forEach(c => {
-                    Object.values(c.checklist).forEach(t => {
-                        totalTasks++;
-                        if (t.done) completedTasks++;
-                    });
-                });
-                const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                const embraportAlert = (proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) || 
+                                       (proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport')))
+                                       ? `<i class="fas fa-exclamation-triangle text-yellow-500 ml-2" title="Alerta Embraport"></i>` : '';
 
                 const card = document.createElement('div');
-                card.className = "bg-slate-950 border border-slate-800 rounded-xl p-4 flex items-center justify-between hover:border-slate-700 transition-all cursor-pointer";
-                card.onclick = () => openModal(p.id);
-
+                card.className = "bg-white p-4 rounded-lg shadow border border-gray-100 flex items-center justify-between cursor-pointer hover:border-blue-300 hover:shadow-md transition";
+                card.onclick = () => openModal(proc.id);
+                
                 card.innerHTML = `
-                    <div class="flex items-center gap-4 flex-1">
-                        <div class="w-10 h-10 rounded-lg ${isImport ? 'bg-blue-600/20 text-blue-400' : 'bg-purple-600/20 text-purple-400'} flex items-center justify-center shrink-0">
-                            <i class="fa-solid ${isImport ? 'fa-ship' : 'fa-plane-departure'}"></i>
+                    <div class="flex items-center gap-6 w-full">
+                        <div class="w-1/4">
+                            <div class="text-xs text-gray-500 font-semibold uppercase">${proc.type === 'import' ? 'Importação' : 'Exportação'} ${embraportAlert}</div>
+                            <div class="font-bold text-gray-800 truncate">${title || 'N/A'}</div>
+                            <div class="text-xs text-gray-500">${proc.armador || ''}</div>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs truncate">${escapeHtml(title)}</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${isImport ? 'bg-blue-950 text-blue-400 border border-blue-900' : 'bg-purple-950 text-purple-400 border border-purple-900'}">${isImport ? 'Importação' : 'Exportação'}</span>
-                                ${isEmbraport && !p.archived ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-950 text-amber-400 border border-amber-900 animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Janela Embraport (24h/48h)</span>' : ''}
-                            </div>
-                            <div class="text-xs text-slate-400 flex items-center gap-3 mt-1">
-                                <span><strong class="text-slate-300">Cliente:</strong> ${escapeHtml(client || 'N/D')}</span>
-                                <span><strong class="text-slate-300">Armador:</strong> ${escapeHtml(p.armador || 'N/D')}</span>
-                                <span><strong class="text-slate-300">Contêineres:</strong> ${p.containers.length} un</span>
-                            </div>
+                        <div class="w-1/4">
+                            <div class="text-xs text-gray-500 font-semibold">Ref / Doc</div>
+                            <div class="font-bold text-gray-700">${docRef || 'N/A'}</div>
                         </div>
-                    </div>
-                    <div class="flex items-center gap-6 ml-4">
-                        <div class="w-32 text-right">
-                            <div class="text-[10px] text-slate-400 mb-1">Progresso (${progress}%)</div>
-                            <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                                <div class="bg-blue-500 h-full transition-all" style="width: ${progress}%"></div>
-                            </div>
+                        <div class="w-2/4 flex flex-col items-end">
+                            <div class="text-xs text-gray-500 font-semibold mb-1">${proc.containers.length} Contêiner(es)</div>
+                            <div class="flex flex-wrap gap-1 justify-end">${badges}</div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
                     </div>
                 `;
-                listContainer.appendChild(card);
+                container.appendChild(card);
             });
         };
 
-        window.openModal = function(id) {
-            currentModalProcessId = id;
-            const p = processes.find(item => item.id === id);
-            if (!p) return;
+        // MODAL DE DETALHES E CHECKLIST
+        window.openModal = (id) => {
+            currentViewingProcessId = id;
+            const proc = processes.find(p => p.id === id);
+            if(!proc) return;
 
-            const isImport = p.type === 'import';
-            document.getElementById('modal-title').innerText = isImport ? `Importação - ${p.doc}` : `Exportação - Booking ${p.booking}`;
+            document.getElementById('process-modal').classList.remove('hidden');
+            document.getElementById('process-modal').classList.add('flex');
             
-            const content = document.getElementById('modal-content');
-            
-            let containersHtml = '';
-            if (p.containers.length === 0) {
-                containersHtml = `<div class="text-xs text-amber-400 bg-amber-950/30 border border-amber-900/50 p-3 rounded-lg"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Nenhum contêiner cadastrado para este processo ainda. Adicione abaixo quando estiver próximo ao deadline.</div>`;
+            const badge = document.getElementById('m-type-badge');
+            const title = document.getElementById('m-title');
+            const subtitle = document.getElementById('m-subtitle');
+            const alertBox = document.getElementById('m-embraport-alert');
+            const btnArchive = document.getElementById('btn-archive-process');
+            const ctArea = document.getElementById('m-containers-area');
+
+            badge.innerText = proc.type;
+            if(proc.type === 'import') {
+                title.innerText = proc.importador || 'Processo de Importação';
+                subtitle.innerText = `Doc: ${proc.documento} | Armador: ${proc.armador} | Carga: ${proc.termCarga} | Vazio: ${proc.termVazio}`;
             } else {
-                p.containers.forEach((c, cIdx) => {
-                    let checklistHtml = '';
-                    const labels = isImport ? {
-                        carregamento: 'Agendamento de Carregamento',
-                        vazio: 'Agendamento de Vazio',
-                        cte: 'Gerar CTE',
-                        ciot: 'Gerar CIOT',
-                        mdfe: 'Gerar MDFE',
-                        encerrarMdfe: 'Encerrar MDFE'
-                    } : {
-                        carregamento: 'Agendamento de Carregamento',
-                        vazio: 'Agendamento de Vazio',
-                        cte: 'Gerar CTE',
-                        ciot: 'Gerar CIOT',
-                        mdfe: 'Gerar MDFE'
-                    };
+                title.innerText = proc.exportador || 'Processo de Exportação';
+                subtitle.innerText = `Booking: ${proc.booking} | Ref: ${proc.referencia} | Navio: ${proc.navio}`;
+            }
 
-                    const keysOrder = isImport 
-                        ? ['carregamento', 'vazio', 'cte', 'ciot', 'mdfe', 'encerrarMdfe']
-                        : ['carregamento', 'vazio', 'cte', 'ciot', 'mdfe'];
+            // Exibir alerta embraport
+            let hasEmbraport = false;
+            if(proc.type === 'import' && proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) hasEmbraport = true;
+            if(proc.type === 'export' && proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport'))) hasEmbraport = true;
+            
+            if(hasEmbraport) alertBox.classList.remove('hidden');
+            else alertBox.classList.add('hidden');
 
-                    keysOrder.forEach(key => {
-                        const task = c.checklist[key];
-                        if (!task) return;
-                        checklistHtml += `
-                            <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800/60">
-                                <div class="flex items-center gap-3">
-                                    <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask('${p.id}', ${cIdx}, '${key}')" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0 cursor-pointer">
-                                    <span class="text-xs ${task.done ? 'line-through text-slate-500' : 'text-slate-200'}">${labels[key]}</span>
-                                </div>
-                                ${(key === 'carregamento' || key === 'vazio') ? `
-                                    <input type="datetime-local" value="${task.data || ''}" onchange="updateTaskDate('${p.id}', ${cIdx}, '${key}', this.value)" class="bg-slate-900 border border-slate-800 rounded px-2 py-1 text-[11px] text-slate-300 focus:outline-none focus:border-blue-500">
-                                ` : ''}
-                            </div>
-                        `;
+            ctArea.innerHTML = '';
+            
+            proc.containers.forEach((ct, index) => {
+                const ctBlock = document.createElement('div');
+                ctBlock.className = "bg-white p-4 rounded shadow-sm border mb-4";
+                
+                let ctHeader = `<div class="border-b pb-2 mb-3"><h4 class="font-bold text-gray-800">Contêiner: ${ct.numero} <span class="text-xs text-gray-500 font-normal ml-2">(${ct.tipo})</span></h4>`;
+                
+                if(proc.type === 'export') {
+                    ctHeader += `<div class="text-xs text-gray-600 mt-1">Tara: ${ct.tara || '-'} | Lacre: ${ct.lacre || '-'}</div>`;
+                }
+                ctHeader += `</div>`;
+                
+                let ctBody = '';
+                if(proc.type === 'import') {
+                    ctBody = `<div class="space-y-2">`;
+                    importChecklistSteps.forEach(step => {
+                        const val = ct.checklist[step.id] || '';
+                        if(step.type === 'checkbox') {
+                            const checked = val === 'true' ? 'checked' : '';
+                            ctBody += `
+                            <label class="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 p-1 rounded cursor-pointer">
+                                <input type="checkbox" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.checked)" ${checked} ${proc.status === 'archived' ? 'disabled' : ''} class="w-4 h-4 text-blue-600">
+                                ${step.label}
+                            </label>`;
+                        } else if(step.type === 'datetime') {
+                            ctBody += `
+                            <div class="flex items-center justify-between text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                                <span>${step.label}</span>
+                                <input type="datetime-local" value="${val}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="border rounded p-1 text-xs w-48">
+                            </div>`;
+                        }
                     });
-
-                    containersHtml += `
-                        <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 space-y-3">
-                            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                                <span class="text-xs font-bold text-blue-400"><i class="fa-solid fa-box mr-1.5"></i>Contêiner ${cIdx + 1}: ${escapeHtml(c.num)} (${escapeHtml(c.tipo)})</span>
-                                <div class="flex items-center gap-3">
-                                    <span class="text-xs text-slate-400">Tara: ${escapeHtml(c.tara || '-')} | Lacre: ${escapeHtml(c.lacre || '-')}</span>
-                                    <button onclick="removeContainer('${p.id}', ${cIdx})" class="text-red-400 hover:text-red-300 text-xs" title="Remover Contêiner"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 gap-2">
-                                ${checklistHtml}
+                    ctBody += `</div>`;
+                } else {
+                    // Export Checklist/Deadlines
+                    ctBody = `
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600">Deadline Draft</label>
+                            <input type="datetime-local" value="${ct.deadlineDraft || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full border rounded p-1 text-xs mt-1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600">Deadline Carga</label>
+                            <input type="datetime-local" value="${ct.deadlineCarga || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full border rounded p-1 text-xs mt-1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600">Retirada Vazio (Terminal / Data)</label>
+                            <div class="flex gap-1 mt-1">
+                                <input type="text" placeholder="Terminal" value="${ct.termVazioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termVazioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
+                                <input type="datetime-local" value="${ct.agVazio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
                             </div>
                         </div>
-                    `;
-                });
-            }
-
-            content.innerHTML = `
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
-                    <div><span class="text-slate-400 block mb-0.5">Cliente</span><strong class="text-slate-200">${isImport ? p.importador : p.exportador}</strong></div>
-                    <div><span class="text-slate-400 block mb-0.5">${isImport ? 'Nº Documento' : 'Booking'}</span><strong class="text-slate-200">${escapeHtml(isImport ? p.doc : p.booking)}</strong></div>
-                    <div><span class="text-slate-400 block mb-0.5">Armador</span><strong class="text-slate-200">${escapeHtml(p.armador || 'N/D')}</strong></div>
-                    <div><span class="text-slate-400 block mb-0.5">${isImport ? 'Term. Carga' : 'Navio'}</span><strong class="text-slate-200">${escapeHtml(isImport ? (p.termCarga || 'N/D') : (p.navio || 'N/D'))}</strong></div>
-                </div>
-
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Contêineres e Checklist</h4>
-                        <button onclick="promptAddContainer('${p.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"><i class="fa-solid fa-plus mr-1"></i> Adicionar Contêiner</button>
-                    </div>
-                    ${containersHtml}
-                </div>
-
-                <div class="flex items-center justify-between pt-4 border-t border-slate-800">
-                    <button onclick="deleteProcess('${p.id}')" class="bg-red-600/20 text-red-400 hover:bg-red-600/30 px-4 py-2 rounded-lg text-xs font-medium transition-colors">Excluir Processo</button>
-                    ${!p.archived ? `
-                        <button onclick="archiveProcess('${p.id}')" class="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white px-5 py-2 rounded-lg text-xs font-medium transition-colors shadow-lg">
-                            Finalizar e Arquivar Processo
-                        </button>
-                    ` : '<span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Processo Arquivado</span>'}
-                </div>
-            `;
-
-            document.getElementById('details-modal').classList.remove('hidden');
-        };
-
-        window.closeModal = function() {
-            document.getElementById('details-modal').classList.add('hidden');
-            currentModalProcessId = null;
-        };
-
-        window.promptAddContainer = async function(pId) {
-            const p = processes.find(item => item.id === pId);
-            if (!p) return;
-
-            const num = prompt("Digite o número do Contêiner:");
-            if (!num) return;
-            const tipo = prompt("Digite o tipo do Contêiner (ex: 20DRY, 40HC):", "40HC") || "40HC";
-            let tara = "";
-            let lacre = "";
-
-            if (p.type === 'export') {
-                tara = prompt("Informe a Tara (kg):", "") || "";
-                lacre = prompt("Informe o Lacre:", "") || "";
-            }
-
-            p.containers.push({
-                num: num.trim().toUpperCase(),
-                tipo: tipo.trim().toUpperCase(),
-                tara: tara.trim(),
-                lacre: lacre.trim(),
-                checklist: p.type === 'import' ? {
-                    carregamento: { done: false, data: '' },
-                    vazio: { done: false, data: '' },
-                    cte: { done: false },
-                    ciot: { done: false },
-                    mdfe: { done: false },
-                    encerrarMdfe: { done: false }
-                } : {
-                    carregamento: { done: false, data: '' },
-                    vazio: { done: false, data: '' },
-                    cte: { done: false },
-                    ciot: { done: false },
-                    mdfe: { done: false }
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600">Depósito Cheio (Terminal / Data)</label>
+                            <div class="flex gap-1 mt-1">
+                                <input type="text" placeholder="Terminal" value="${ct.termCheioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termCheioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
+                                <input type="datetime-local" value="${ct.agCheio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
+                            </div>
+                        </div>
+                    </div>`;
                 }
+                
+                ctBlock.innerHTML = ctHeader + ctBody;
+                ctArea.appendChild(ctBlock);
             });
 
-            await updateDoc(doc(db, "processes", pId), { containers: p.containers });
-            openModal(pId);
-            loadProcesses();
+            if(proc.status === 'active') {
+                btnArchive.classList.remove('hidden');
+                btnArchive.onclick = () => archiveProcess(proc.id);
+            } else {
+                btnArchive.classList.add('hidden');
+            }
         };
 
-        window.removeContainer = async function(pId, cIdx) {
-            if (!confirm("Deseja remover este contêiner do processo?")) return;
-            const p = processes.find(item => item.id === pId);
-            if (!p) return;
-            p.containers.splice(cIdx, 1);
-            await updateDoc(doc(db, "processes", pId), { containers: p.containers });
-            openModal(pId);
-            loadProcesses();
+        window.closeModal = () => {
+            currentViewingProcessId = null;
+            document.getElementById('process-modal').classList.add('hidden');
+            document.getElementById('process-modal').classList.remove('flex');
         };
 
-        window.toggleTask = async function(pId, cIdx, taskKey) {
-            const p = processes.find(item => item.id === pId);
-            if (!p) return;
-            p.containers[cIdx].checklist[taskKey].done = !p.containers[cIdx].checklist[taskKey].done;
-            await updateDoc(doc(db, "processes", pId), { containers: p.containers });
-            openModal(pId);
-            loadProcesses();
+        window.updateChecklist = async (procId, ctId, fieldId, value) => {
+            const proc = processes.find(p => p.id === procId);
+            const ctIndex = proc.containers.findIndex(c => c.id === ctId);
+            const ref = doc(db, "processes", procId);
+            proc.containers[ctIndex].checklist[fieldId] = value.toString();
+            await updateDoc(ref, { containers: proc.containers });
         };
 
-        window.updateTaskDate = async function(pId, cIdx, taskKey, val) {
-            const p = processes.find(item => item.id === pId);
-            if (!p) return;
-            p.containers[cIdx].checklist[taskKey].data = val;
-            await updateDoc(doc(db, "processes", pId), { containers: p.containers });
+        window.updateField = async (procId, ctId, field, value) => {
+            const proc = processes.find(p => p.id === procId);
+            const ctIndex = proc.containers.findIndex(c => c.id === ctId);
+            const ref = doc(db, "processes", procId);
+            proc.containers[ctIndex][field] = value;
+            await updateDoc(ref, { containers: proc.containers });
         };
 
-        window.archiveProcess = async function(pId) {
-            await updateDoc(doc(db, "processes", pId), { archived: true });
-            closeModal();
-            loadProcesses();
-        };
-
-        window.deleteProcess = async function(pId) {
-            if (confirm("Tem certeza que deseja excluir este processo?")) {
-                await deleteDoc(doc(db, "processes", pId));
+        window.archiveProcess = async (procId) => {
+            if(confirm("Tem certeza que deseja mover este processo para Arquivados?")) {
+                const ref = doc(db, "processes", procId);
+                await updateDoc(ref, { status: 'archived' });
                 closeModal();
-                loadProcesses();
             }
         };
     </script>
