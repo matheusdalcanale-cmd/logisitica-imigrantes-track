@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogiTrack Pro - Gestão Logística</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen antialiased">
@@ -82,15 +78,6 @@
 
             <!-- FORMULÁRIO -->
             <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                <!-- LEITOR IA -->
-                <div class="bg-blue-950/30 border border-blue-900/50 rounded-xl p-3.5">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-blue-300 mb-1.5">
-                        <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Leitura Inteligente (IA)
-                    </label>
-                    <input type="file" id="ai-file-input" accept=".pdf,image/*" onchange="processFileWithAI(this)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
-                    <div id="ai-status" class="text-xs text-slate-400 mt-2 hidden"></div>
-                </div>
-
                 <form id="process-form" onsubmit="saveProcess(event)" class="space-y-3.5">
                     
                     <!-- CAMPOS IMPORTAÇÃO -->
@@ -248,10 +235,7 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CHAVE DO GEMINI INTEGRADA
-        const GEMINI_API_KEY = "AQ.Ab8RN6LQHE26HVcd6YdvEi7hN31AuKRbpwST3x4zHpWerxIGfg"; 
-
-        // CONFIGURAÇÃO DO FIREBASE
+        // CONFIGURAÇÃO DO FIREBASE (SUAS CREDENCIAIS)
         const firebaseConfig = {
             apiKey: "AIzaSyAKGjOftcyDZ-5yPA-5NK55GohtGlrfbeQ",
             authDomain: "track-logistica.firebaseapp.com",
@@ -685,92 +669,6 @@
                 await deleteDoc(doc(db, "processes", pId));
                 closeModal();
                 loadProcesses();
-            }
-        };
-
-        // LEITURA INTELIGENTE COM GEMINI AI
-        window.processFileWithAI = async function(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const statusDiv = document.getElementById('ai-status');
-            statusDiv.classList.remove('hidden');
-            statusDiv.innerText = "Lendo documento com IA...";
-
-            try {
-                let textToAnalyze = "";
-                if (file.type === 'application/pdf') {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        textToAnalyze += textContent.items.map(item => item.str).join(' ') + "\n";
-                    }
-                } else {
-                    textToAnalyze = "Arquivo de imagem enviado.";
-                }
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `Analise o texto aduaneiro abaixo e extraia os dados em formato estrito JSON sem markdown. 
-                                Estrutura exata necessária:
-                                {
-                                  "importador": "nome ou vazio",
-                                  "doc": "número da DI, DTA ou DUIMP",
-                                  "armador": "armador ou vazio",
-                                  "termCarga": "terminal de carregamento ou vazio",
-                                  "containers": [{"num": "número do container", "tipo": "20DRY ou 40HC ou 40DRY"}]
-                                }
-                                Texto: ${textToAnalyze.substring(0, 15000)}`
-                            }]
-                        }]
-                    })
-                });
-
-                const data = await response.json();
-                const rawText = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
-                const parsed = JSON.parse(rawText);
-
-                if (parsed.importador) document.getElementById('imp-importador').value = parsed.importador;
-                if (parsed.doc) document.getElementById('imp-doc').value = parsed.doc;
-                if (parsed.armador) document.getElementById('imp-armador').value = parsed.armador;
-                if (parsed.termCarga) document.getElementById('imp-term-carga').value = parsed.termCarga;
-
-                if (parsed.containers && parsed.containers.length > 0) {
-                    const containerSection = document.getElementById('containers-container');
-                    containerSection.innerHTML = '';
-                    parsed.containers.forEach(c => {
-                        const div = document.createElement('div');
-                        div.className = "container-row bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-2";
-                        div.innerHTML = `
-                            <div class="flex gap-2">
-                                <input type="text" value="${c.num || ''}" placeholder="Nº Contêiner" class="container-num flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs uppercase" required>
-                                <select class="container-tipo w-24 bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs">
-                                    <option value="20DRY" ${c.tipo === '20DRY' ? 'selected' : ''}>20DRY</option>
-                                    <option value="40HC" ${c.tipo === '40HC' ? 'selected' : ''}>40HC</option>
-                                    <option value="40DRY" ${c.tipo === '40DRY' ? 'selected' : ''}>40DRY</option>
-                                    <option value="40OT" ${c.tipo === '40OT' ? 'selected' : ''}>40OT</option>
-                                </select>
-                                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-slate-500 hover:text-red-400 px-1"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                            <div class="container-export-extras hidden grid grid-cols-2 gap-2">
-                                <input type="text" placeholder="Tara (kg)" class="container-tara bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs">
-                                <input type="text" placeholder="Lacre" class="container-lacre bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs">
-                            </div>
-                        `;
-                        containerSection.appendChild(div);
-                    });
-                }
-
-                statusDiv.innerText = "Leitura concluída com sucesso!";
-                setTimeout(() => statusDiv.classList.add('hidden'), 3000);
-            } catch (err) {
-                console.error(err);
-                statusDiv.innerText = "Erro ao processar documento por IA.";
             }
         };
     </script>
