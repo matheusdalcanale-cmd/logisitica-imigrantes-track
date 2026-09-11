@@ -560,7 +560,14 @@
                     mdfe: 'Gerar MDFE'
                 };
 
-                for (let [key, task] of Object.entries(c.checklist)) {
+                // ORDEM FORÇADA E RIGOROSA DO CHECKLIST
+                const keysOrder = isImport 
+                    ? ['carregamento', 'vazio', 'cte', 'ciot', 'mdfe', 'encerrarMdfe']
+                    : ['carregamento', 'vazio', 'cte', 'ciot', 'mdfe'];
+
+                keysOrder.forEach(key => {
+                    const task = c.checklist[key];
+                    if (!task) return;
                     checklistHtml += `
                         <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800/60">
                             <div class="flex items-center gap-3">
@@ -572,7 +579,7 @@
                             ` : ''}
                         </div>
                     `;
-                }
+                });
 
                 containersHtml += `
                     <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 space-y-3">
