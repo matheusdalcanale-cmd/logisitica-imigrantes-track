@@ -234,8 +234,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-
         // CONFIGURAÇÃO DO FIREBASE (SUAS CREDENCIAIS)
         const firebaseConfig = {
             apiKey: "AIzaSyAKGjOftcyDZ-5yPA-5NK55GohtGlrfbeQ",
@@ -249,7 +247,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
         let unsubscribeProcesses = null;
 
         let currentUser = null;
@@ -411,8 +408,7 @@
                                 ciot: { done: false },
                                 mdfe: { done: false },
                                 encerrarMdfe: { done: false }
-                            },
-                            vazioProof: null
+                            }
                         });
                     }
                 });
@@ -613,22 +609,10 @@
                             <div class="grid grid-cols-1 gap-2">
                                 ${checklistHtml}
                             </div>
-                            <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
-                                <div class="text-xs text-slate-400">
-                                    Comprovante Devolução Vazio: 
-                                    <span class="${c.vazioProof ? 'text-emerald-400 font-semibold' : 'text-amber-400'}">${c.vazioProof?.url ? 'Enviado ✅' : 'Pendente ⏳'}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    ${c.vazioProof?.url ? `<a href="${escapeHtml(c.vazioProof.url)}" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-400 hover:underline">Abrir comprovante</a>` : ''}
-                                    <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onchange="uploadVazioProof(event, '${p.id}', ${cIdx})" class="text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer">
-                                </div>
-                            </div>
                         </div>
                     `;
                 });
             }
-
-            let allProofsDone = p.containers.length > 0 && p.containers.every(c => c.vazioProof?.url);
 
             content.innerHTML = `
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
@@ -649,7 +633,7 @@
                 <div class="flex items-center justify-between pt-4 border-t border-slate-800">
                     <button onclick="deleteProcess('${p.id}')" class="bg-red-600/20 text-red-400 hover:bg-red-600/30 px-4 py-2 rounded-lg text-xs font-medium transition-colors">Excluir Processo</button>
                     ${!p.archived ? `
-                        <button onclick="archiveProcess('${p.id}')" ${!allProofsDone ? 'disabled' : ''} class="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white px-5 py-2 rounded-lg text-xs font-medium transition-colors shadow-lg">
+                        <button onclick="archiveProcess('${p.id}')" class="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white px-5 py-2 rounded-lg text-xs font-medium transition-colors shadow-lg">
                             Finalizar e Arquivar Processo
                         </button>
                     ` : '<span class="text-xs text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Processo Arquivado</span>'}
@@ -697,8 +681,7 @@
                     cte: { done: false },
                     ciot: { done: false },
                     mdfe: { done: false }
-                },
-                vazioProof: null
+                }
             });
 
             await updateDoc(doc(db, "processes", pId), { containers: p.containers });
@@ -730,50 +713,6 @@
             if (!p) return;
             p.containers[cIdx].checklist[taskKey].data = val;
             await updateDoc(doc(db, "processes", pId), { containers: p.containers });
-        };
-
-        window.uploadVazioProof = async function(e, pId, cIdx) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-            const maxSize = 10 * 1024 * 1024;
-            if (!allowedTypes.includes(file.type)) {
-                alert('Formato não suportado. Use JPG, PNG, WEBP ou PDF.');
-                e.target.value = '';
-                return;
-            }
-            if (file.size > maxSize) {
-                alert('O arquivo deve ter no máximo 10 MB.');
-                e.target.value = '';
-                return;
-            }
-
-            try {
-                const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-                const fileRef = storageRef(storage, `users/${currentUser.uid}/processes/${pId}/containers/${cIdx}/${Date.now()}_${safeName}`);
-                const snapshot = await uploadBytes(fileRef, file, { contentType: file.type });
-                const url = await getDownloadURL(snapshot.ref);
-
-                const p = processes.find(item => item.id === pId);
-                if (!p || !p.containers?.[cIdx]) throw new Error('Contêiner não encontrado.');
-
-                p.containers[cIdx].vazioProof = {
-                    url,
-                    nome: file.name,
-                    tipo: file.type,
-                    tamanho: file.size,
-                    enviadoEm: new Date().toISOString()
-                };
-
-                await updateDoc(doc(db, "processes", pId), { containers: p.containers });
-                openModal(pId);
-            } catch (err) {
-                console.error(err);
-                alert('Erro ao enviar comprovante: ' + err.message);
-            } finally {
-                e.target.value = '';
-            }
         };
 
         window.archiveProcess = async function(pId) {
