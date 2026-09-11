@@ -6,42 +6,57 @@
     <title>LogiTrack Pro - Gestão Logística</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#0f172a', // slate-900 base
+                            800: '#1e293b', // slate-800 cards
+                            700: '#334155', // slate-700 inputs
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans h-screen flex overflow-hidden">
+<body class="bg-navy-900 text-slate-300 font-sans h-screen flex overflow-hidden">
 
     <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-96">
-            <h2 class="text-2xl font-bold mb-6 text-center text-blue-600"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h2>
-            <form id="login-form" class="space-y-4">
+    <div id="login-screen" class="fixed inset-0 bg-navy-900/95 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-navy-800 p-8 rounded-xl shadow-2xl w-96 border border-slate-700">
+            <h2 class="text-2xl font-bold mb-6 text-center text-blue-400"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h2>
+            <form id="login-form" class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">E-mail</label>
-                    <input type="email" id="auth-email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    <label class="block text-sm font-medium text-slate-400 mb-1">E-mail</label>
+                    <input type="email" id="auth-email" required class="w-full rounded-lg bg-navy-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2.5 outline-none transition">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Senha</label>
-                    <input type="password" id="auth-password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Senha</label>
+                    <input type="password" id="auth-password" required class="w-full rounded-lg bg-navy-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2.5 outline-none transition">
                 </div>
-                <div class="text-red-500 text-sm hidden" id="auth-error"></div>
-                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">Entrar / Cadastrar</button>
-                <p class="text-xs text-gray-500 text-center mt-4">Se o e-mail não existir, uma nova conta será criada automaticamente.</p>
+                <div class="text-red-400 text-sm hidden bg-red-900/20 p-2 rounded border border-red-800" id="auth-error"></div>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">Entrar / Cadastrar</button>
+                <p class="text-xs text-slate-500 text-center mt-4">Se o e-mail não existir, uma nova conta será criada automaticamente.</p>
             </form>
         </div>
     </div>
 
     <!-- SIDEBAR / FORMULÁRIO DE CRIAÇÃO -->
-    <aside class="w-80 bg-white shadow-xl flex flex-col h-full border-r border-gray-200 hidden" id="sidebar">
-        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-blue-600 text-white">
-            <h1 class="text-xl font-bold"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h1>
-            <button id="btn-logout" class="text-white hover:text-gray-200 text-sm"><i class="fas fa-sign-out-alt"></i> Sair</button>
+    <aside class="w-[340px] bg-navy-800 shadow-2xl flex flex-col h-full border-r border-slate-700 hidden" id="sidebar">
+        <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-navy-900">
+            <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h1>
+            <button id="btn-logout" class="text-slate-400 hover:text-white text-sm transition"><i class="fas fa-sign-out-alt"></i> Sair</button>
         </div>
         
-        <div class="p-6 overflow-y-auto flex-1">
-            <h2 class="text-lg font-bold mb-4 text-gray-700">Novo Processo</h2>
+        <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
+            <h2 class="text-lg font-bold mb-4 text-white">Novo Processo</h2>
             
-            <div class="flex gap-2 mb-6">
-                <button id="btn-type-import" class="flex-1 py-2 text-sm font-semibold rounded bg-blue-100 text-blue-700 border border-blue-300 transition">Importação</button>
-                <button id="btn-type-export" class="flex-1 py-2 text-sm font-semibold rounded bg-gray-100 text-gray-600 border border-gray-300 transition">Exportação</button>
+            <div class="flex gap-2 mb-6 bg-navy-700 p-1 rounded-lg">
+                <button id="btn-type-import" class="flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition">Importação</button>
+                <button id="btn-type-export" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition">Exportação</button>
             </div>
 
             <form id="process-form" class="space-y-4">
@@ -49,115 +64,117 @@
                 
                 <!-- Campos Comuns -->
                 <div id="fields-common">
-                    <label class="block text-xs font-semibold text-gray-600 mb-1">Armador</label>
-                    <input type="text" id="f-armador" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white" required>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Armador</label>
+                    <input type="text" id="f-armador" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition" required>
                 </div>
 
                 <!-- Campos Importação -->
                 <div id="fields-import" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Importador</label>
-                        <input type="text" id="f-importador" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Importador</label>
+                        <input type="text" id="f-importador" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">DI / DTA / DUIMP</label>
-                        <input type="text" id="f-documento" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">DI / DTA / DUIMP</label>
+                        <input type="text" id="f-documento" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Terminal de Carregamento</label>
-                        <input type="text" id="f-term-carga" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Carregamento</label>
+                        <input type="text" id="f-term-carga" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Terminal de Vazio</label>
-                        <input type="text" id="f-term-vazio" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Vazio</label>
+                        <input type="text" id="f-term-vazio" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                 </div>
 
                 <!-- Campos Exportação -->
                 <div id="fields-export" class="space-y-4 hidden">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Exportador</label>
-                        <input type="text" id="f-exportador" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Exportador</label>
+                        <input type="text" id="f-exportador" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Referência do Processo</label>
-                        <input type="text" id="f-referencia" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Referência do Processo</label>
+                        <input type="text" id="f-referencia" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Número do Booking</label>
-                        <input type="text" id="f-booking" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Número do Booking</label>
+                        <input type="text" id="f-booking" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nome do Navio</label>
-                        <input type="text" id="f-navio" class="w-full p-2 text-sm border rounded bg-gray-50 focus:bg-white">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Nome do Navio</label>
+                        <input type="text" id="f-navio" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                 </div>
 
-                <div class="border-t pt-4 mt-4">
-                    <h3 class="text-sm font-bold text-gray-700 mb-2 flex justify-between items-center">
-                        Contêineres
-                        <button type="button" id="btn-add-container" class="text-blue-600 hover:text-blue-800 text-xs"><i class="fas fa-plus"></i> Adicionar</button>
+                <div class="border-t border-slate-700 pt-5 mt-5">
+                    <h3 class="text-sm font-bold text-white mb-3 flex justify-between items-center">
+                        Contêineres Iniciais
+                        <button type="button" id="btn-add-container" class="text-blue-400 hover:text-blue-300 text-xs transition"><i class="fas fa-plus"></i> Adicionar</button>
                     </h3>
+                    <p class="text-xs text-slate-500 mb-3 leading-tight">Opcional: Você pode adicionar ou editar contêineres e lacres depois, abrindo o processo.</p>
                     <div id="container-list" class="space-y-3">
                         <!-- Containers inseridos dinamicamente -->
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded mt-6 hover:bg-green-700 shadow-md">Criar Processo</button>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg mt-8 hover:bg-blue-500 shadow-lg shadow-blue-900/50 transition">Criar Processo</button>
             </form>
         </div>
     </aside>
 
     <!-- PAINEL PRINCIPAL -->
-    <main class="flex-1 flex flex-col h-full bg-gray-50 hidden" id="main-panel">
-        <header class="bg-white shadow-sm border-b px-8 py-4 flex items-center justify-between">
-            <div class="flex gap-4">
-                <button id="tab-import" class="px-4 py-2 font-bold text-blue-700 border-b-2 border-blue-700">Importações Ativas</button>
-                <button id="tab-export" class="px-4 py-2 font-bold text-gray-500 hover:text-blue-700">Exportações Ativas</button>
-                <button id="tab-archive" class="px-4 py-2 font-bold text-gray-500 hover:text-blue-700">Arquivados</button>
+    <main class="flex-1 flex flex-col h-full hidden" id="main-panel">
+        <header class="bg-navy-800 shadow-md border-b border-slate-700 px-8 py-5 flex items-center justify-between">
+            <div class="flex gap-6">
+                <button id="tab-import" class="font-bold text-blue-400 border-b-2 border-blue-400 pb-1 transition">Importações Ativas</button>
+                <button id="tab-export" class="font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-1 transition">Exportações Ativas</button>
+                <button id="tab-archive" class="font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-1 transition">Arquivados</button>
             </div>
-            <div class="text-sm text-gray-500" id="user-display"></div>
+            <div class="text-sm text-slate-400 bg-navy-900 px-3 py-1.5 rounded-full border border-slate-700" id="user-display"></div>
         </header>
 
         <div class="flex-1 p-8 overflow-y-auto">
-            <div id="processes-container" class="space-y-3">
+            <div id="processes-container" class="space-y-4">
                 <!-- Cartões de processos -->
             </div>
         </div>
     </main>
 
     <!-- MODAL DE DETALHES -->
-    <div id="process-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="bg-gray-100 p-4 border-b flex justify-between items-start">
+    <div id="process-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-navy-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-slate-700 overflow-hidden">
+            
+            <div class="bg-navy-900 p-5 border-b border-slate-700 flex justify-between items-start">
                 <div>
-                    <div class="flex gap-2 items-center mb-1">
-                        <span id="m-type-badge" class="px-2 py-1 text-xs font-bold rounded bg-blue-100 text-blue-800 uppercase"></span>
-                        <h2 id="m-title" class="text-xl font-bold text-gray-800"></h2>
+                    <div class="flex gap-3 items-center mb-1">
+                        <span id="m-type-badge" class="px-2.5 py-1 text-xs font-bold rounded bg-blue-900/50 text-blue-400 border border-blue-800 uppercase tracking-wider"></span>
+                        <h2 id="m-title" class="text-2xl font-bold text-white"></h2>
                     </div>
-                    <p id="m-subtitle" class="text-sm text-gray-600"></p>
+                    <p id="m-subtitle" class="text-sm text-slate-400 mt-1"></p>
                 </div>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+                <button onclick="closeModal()" class="text-slate-500 hover:text-white text-2xl transition">&times;</button>
             </div>
             
             <!-- Alerta Embraport -->
-            <div id="m-embraport-alert" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div id="m-embraport-alert" class="hidden bg-yellow-900/30 border-l-4 border-yellow-500 p-4">
                 <div class="flex">
-                    <div class="flex-shrink-0"><i class="fas fa-exclamation-triangle text-yellow-400"></i></div>
+                    <div class="flex-shrink-0"><i class="fas fa-exclamation-triangle text-yellow-500 mt-0.5"></i></div>
                     <div class="ml-3">
-                        <p class="text-sm text-yellow-700 font-bold">Atenção: Operação Embraport detectada.</p>
-                        <p class="text-xs text-yellow-600">Janelas para DTA liberadas com 24h a no máximo 48h de antecedência. Monitore o agendamento.</p>
+                        <p class="text-sm text-yellow-400 font-bold">Atenção: Operação Embraport detectada.</p>
+                        <p class="text-xs text-yellow-500/80 mt-1">Janelas para DTA liberadas com 24h a no máximo 48h de antecedência. Monitore o agendamento.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-6 bg-gray-50" id="m-containers-area">
+            <div class="flex-1 overflow-y-auto p-6 bg-navy-800" id="m-containers-area">
                 <!-- Conteúdo gerado dinamicamente -->
             </div>
 
-            <div class="p-4 border-t bg-white flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-100 rounded">Fechar</button>
-                <button id="btn-archive-process" class="px-6 py-2 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 hidden">Arquivar Processo</button>
+            <div class="p-5 border-t border-slate-700 bg-navy-900 flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-5 py-2.5 text-slate-300 font-semibold hover:bg-navy-700 rounded-lg transition border border-transparent hover:border-slate-600">Fechar</button>
+                <button id="btn-archive-process" class="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-lg shadow-emerald-900/30 hover:bg-emerald-500 transition hidden"><i class="fas fa-check-double mr-2"></i> Arquivar Processo</button>
             </div>
         </div>
     </div>
@@ -168,7 +185,6 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURAÇÃO DO FIREBASE FORNECIDA
         const firebaseConfig = {
             apiKey: "AIzaSyAKGjOftcyDZ-5yPA-5NK55GohtGlrfbeQ",
             authDomain: "track-logistica.firebaseapp.com",
@@ -183,16 +199,15 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        let currentActiveTab = 'import'; // import, export, archive
+        let currentActiveTab = 'import'; 
         let processes = [];
         let currentViewingProcessId = null;
 
-        // ELEMENTOS UI
         const loginScreen = document.getElementById('login-screen');
         const sidebar = document.getElementById('sidebar');
         const mainPanel = document.getElementById('main-panel');
         
-        // CHECKLIST ORDER (Conforme solicitado)
+        // CHECKLIST ORDER IMPORT (Exatamente como solicitado)
         const importChecklistSteps = [
             { id: 'ag_carga', label: 'Agendamento de Carregamento', type: 'datetime' },
             { id: 'ag_vazio', label: 'Agendamento de Vazio', type: 'datetime' },
@@ -209,7 +224,7 @@
                 loginScreen.classList.add('hidden');
                 sidebar.classList.remove('hidden');
                 mainPanel.classList.remove('hidden');
-                document.getElementById('user-display').innerText = user.email;
+                document.getElementById('user-display').innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${user.email}`;
                 loadProcesses();
             } else {
                 currentUser = null;
@@ -222,7 +237,7 @@
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value; // Valor lido sem restrições
+            const password = document.getElementById('auth-password').value;
             const errorDiv = document.getElementById('auth-error');
             
             try {
@@ -246,7 +261,7 @@
 
         document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
-        // ALTERNAR ABAS E TIPOS
+        // ALTERNAR ABAS E TIPOS NO FORMULÁRIO
         const setFormType = (type) => {
             document.getElementById('process-type').value = type;
             const btnImport = document.getElementById('btn-type-import');
@@ -255,16 +270,16 @@
             const fExport = document.getElementById('fields-export');
             
             document.getElementById('container-list').innerHTML = '';
-            addContainerField(type);
+            addContainerField(type); // Adiciona 1 opcional por padrão
 
             if (type === 'import') {
-                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-blue-100 text-blue-700 border border-blue-300 transition';
-                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-gray-100 text-gray-600 border border-gray-300 transition';
+                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition';
+                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition bg-transparent';
                 fImport.classList.remove('hidden');
                 fExport.classList.add('hidden');
             } else {
-                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-blue-100 text-blue-700 border border-blue-300 transition';
-                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded bg-gray-100 text-gray-600 border border-gray-300 transition';
+                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition';
+                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition bg-transparent';
                 fExport.classList.remove('hidden');
                 fImport.classList.add('hidden');
             }
@@ -281,11 +296,12 @@
                 'archive': document.getElementById('tab-archive')
             };
             
-            Object.values(tabs).forEach(t => t.className = 'px-4 py-2 font-bold text-gray-500 hover:text-blue-700');
+            Object.values(tabs).forEach(t => t.className = 'font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-1 transition');
+            
             if(tab === 'archive') {
-                tabs[tab].className = 'px-4 py-2 font-bold text-green-700 border-b-2 border-green-700';
+                tabs[tab].className = 'font-bold text-emerald-500 border-b-2 border-emerald-500 pb-1 transition';
             } else {
-                tabs[tab].className = 'px-4 py-2 font-bold text-blue-700 border-b-2 border-blue-700';
+                tabs[tab].className = 'font-bold text-blue-400 border-b-2 border-blue-400 pb-1 transition';
             }
             renderProcesses();
         };
@@ -294,38 +310,30 @@
         document.getElementById('tab-export').addEventListener('click', () => setMainTab('export'));
         document.getElementById('tab-archive').addEventListener('click', () => setMainTab('archive'));
 
-        // GESTÃO DE CONTAINERS NO FORMULÁRIO
+        // GESTÃO DE CONTAINERS NO FORMULÁRIO LATERAL (OPCIONALIDADE)
         let containerCount = 0;
         const addContainerField = (type = document.getElementById('process-type').value) => {
             containerCount++;
             const div = document.createElement('div');
-            div.className = 'bg-gray-100 p-3 rounded border border-gray-200 relative';
+            div.className = 'bg-navy-900 p-3 rounded-lg border border-slate-700 relative';
             div.id = `ct-form-${containerCount}`;
             
             let html = `
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-gray-600">Contêiner ${containerCount}</span>
-                    ${containerCount > 1 ? `<button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Unidade ${containerCount}</span>
+                    <button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="text-slate-500 hover:text-red-400 text-xs transition"><i class="fas fa-trash"></i></button>
                 </div>
-                <div class="grid grid-cols-2 gap-2 mb-2">
-                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border rounded" required>
-                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border rounded" required>
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded outline-none focus:border-blue-500">
+                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded outline-none focus:border-blue-500">
                 </div>`;
                 
-            if(type === 'export') {
-                html += `
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="Tara" class="ct-tara w-full p-2 text-xs border rounded">
-                    <input type="text" placeholder="Lacre" class="ct-lacre w-full p-2 text-xs border rounded">
-                </div>`;
-            }
-            
             div.innerHTML = html;
             document.getElementById('container-list').appendChild(div);
         };
         
         document.getElementById('btn-add-container').addEventListener('click', () => addContainerField());
-        addContainerField('import'); // Init
+        addContainerField('import'); 
 
         // SALVAR NOVO PROCESSO
         document.getElementById('process-form').addEventListener('submit', async (e) => {
@@ -355,18 +363,22 @@
 
             const ctForms = document.querySelectorAll('#container-list > div');
             ctForms.forEach((ctDiv, index) => {
+                let numero = ctDiv.querySelector('.ct-num').value.trim();
+                let tipo = ctDiv.querySelector('.ct-tipo').value.trim();
+                
+                // Salva mesmo se vazio, pois no modal o usuário vai editar depois
                 let ct = {
                     id: `c_${Date.now()}_${index}`,
-                    numero: ctDiv.querySelector('.ct-num').value,
-                    tipo: ctDiv.querySelector('.ct-tipo').value,
+                    numero: numero,
+                    tipo: tipo,
                     checklist: {} 
                 };
                 
                 if (type === 'import') {
                     importChecklistSteps.forEach(step => ct.checklist[step.id] = '');
                 } else {
-                    ct.tara = ctDiv.querySelector('.ct-tara').value;
-                    ct.lacre = ctDiv.querySelector('.ct-lacre').value;
+                    ct.tara = '';
+                    ct.lacre = '';
                     ct.deadlineDraft = '';
                     ct.deadlineCarga = '';
                     ct.agVazio = '';
@@ -378,12 +390,11 @@
             });
 
             try {
-                const docRef = await addDoc(collection(db, "processes"), processData);
+                await addDoc(collection(db, "processes"), processData);
                 document.getElementById('process-form').reset();
                 document.getElementById('container-list').innerHTML = '';
                 containerCount = 0;
-                addContainerField(type);
-                setMainTab(type);
+                setMainTab(type); // Muda para a aba correspondente para ver o processo criado
             } catch (error) {
                 console.error("Erro ao salvar:", error);
                 alert("Erro ao criar processo.");
@@ -400,14 +411,15 @@
                 });
                 renderProcesses();
                 
+                // Mantém o modal atualizado em tempo real se estiver aberto
                 if(currentViewingProcessId) {
                     const updatedData = processes.find(p => p.id === currentViewingProcessId);
-                    if(updatedData) openModal(currentViewingProcessId);
+                    if(updatedData) renderModalContent(updatedData);
                 }
             });
         };
 
-        // RENDERIZAR CARTÕES
+        // RENDERIZAR CARTÕES (TELA PRINCIPAL)
         const renderProcesses = () => {
             const container = document.getElementById('processes-container');
             container.innerHTML = '';
@@ -420,37 +432,43 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center p-8 text-gray-400">Nenhum processo encontrado nesta categoria.</div>`;
+                container.innerHTML = `<div class="text-center p-12 text-slate-500 bg-navy-800 rounded-xl border border-slate-700 border-dashed">Nenhum processo encontrado nesta visão.</div>`;
                 return;
             }
 
             filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(proc => {
                 const title = proc.type === 'import' ? proc.importador : proc.exportador;
                 const docRef = proc.type === 'import' ? proc.documento : proc.booking;
-                const badges = proc.containers.map(c => `<span class="bg-gray-200 text-xs px-2 py-1 rounded">${c.numero}</span>`).join(' ');
+                
+                // Conta apenas contêineres que já têm número preenchido (ou mostra vazio)
+                const validContainers = proc.containers.filter(c => c.numero !== '');
+                const countBadgeText = validContainers.length > 0 ? `${validContainers.length} Unid.` : 'Pendente';
+                
+                const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded shadow-sm">${c.numero}</span>`).join(' ');
+                const extraBadges = validContainers.length > 3 ? `<span class="text-xs text-slate-500">+...+</span>` : '';
 
                 const embraportAlert = (proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) || 
                                        (proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport')))
                                        ? `<i class="fas fa-exclamation-triangle text-yellow-500 ml-2" title="Alerta Embraport"></i>` : '';
 
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-lg shadow border border-gray-100 flex items-center justify-between cursor-pointer hover:border-blue-300 hover:shadow-md transition";
+                card.className = "bg-navy-800 p-5 rounded-xl shadow-lg border border-slate-700 flex items-center justify-between cursor-pointer hover:border-blue-500 hover:shadow-blue-900/20 transition group";
                 card.onclick = () => openModal(proc.id);
                 
                 card.innerHTML = `
                     <div class="flex items-center gap-6 w-full">
-                        <div class="w-1/4">
-                            <div class="text-xs text-gray-500 font-semibold uppercase">${proc.type === 'import' ? 'Importação' : 'Exportação'} ${embraportAlert}</div>
-                            <div class="font-bold text-gray-800 truncate">${title || 'N/A'}</div>
-                            <div class="text-xs text-gray-500">${proc.armador || ''}</div>
+                        <div class="w-1/3">
+                            <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">${proc.type === 'import' ? 'Importação' : 'Exportação'} ${embraportAlert}</div>
+                            <div class="font-bold text-white text-lg truncate group-hover:text-blue-400 transition">${title || 'Sem Nome'}</div>
+                            <div class="text-xs text-slate-400 mt-1"><i class="fas fa-ship mr-1 opacity-50"></i> ${proc.armador || 'N/A'}</div>
                         </div>
-                        <div class="w-1/4">
-                            <div class="text-xs text-gray-500 font-semibold">Ref / Doc</div>
-                            <div class="font-bold text-gray-700">${docRef || 'N/A'}</div>
+                        <div class="w-1/3 border-l border-slate-700 pl-6">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Doc / Booking</div>
+                            <div class="font-bold text-slate-200 text-base">${docRef || 'Aguardando'}</div>
                         </div>
-                        <div class="w-2/4 flex flex-col items-end">
-                            <div class="text-xs text-gray-500 font-semibold mb-1">${proc.containers.length} Contêiner(es)</div>
-                            <div class="flex flex-wrap gap-1 justify-end">${badges}</div>
+                        <div class="w-1/3 flex flex-col items-end">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">${countBadgeText}</div>
+                            <div class="flex flex-wrap gap-1.5 justify-end">${badges} ${extraBadges}</div>
                         </div>
                     </div>
                 `;
@@ -458,7 +476,7 @@
             });
         };
 
-        // MODAL DE DETALHES E CHECKLIST
+        // CONTROLE DO MODAL
         window.openModal = (id) => {
             currentViewingProcessId = id;
             const proc = processes.find(p => p.id === id);
@@ -467,6 +485,17 @@
             document.getElementById('process-modal').classList.remove('hidden');
             document.getElementById('process-modal').classList.add('flex');
             
+            renderModalContent(proc);
+        };
+
+        window.closeModal = () => {
+            currentViewingProcessId = null;
+            document.getElementById('process-modal').classList.add('hidden');
+            document.getElementById('process-modal').classList.remove('flex');
+        };
+
+        // RENDERIZAR CONTEÚDO DO MODAL (INCLUI A LÓGICA DE EDIÇÃO DE CONTÊINER)
+        const renderModalContent = (proc) => {
             const badge = document.getElementById('m-type-badge');
             const title = document.getElementById('m-title');
             const subtitle = document.getElementById('m-subtitle');
@@ -477,13 +506,13 @@
             badge.innerText = proc.type;
             if(proc.type === 'import') {
                 title.innerText = proc.importador || 'Processo de Importação';
-                subtitle.innerText = `Doc: ${proc.documento} | Armador: ${proc.armador} | Carga: ${proc.termCarga} | Vazio: ${proc.termVazio}`;
+                subtitle.innerText = `DI/DTA/DUIMP: ${proc.documento} | Armador: ${proc.armador} | Carga: ${proc.termCarga} | Vazio: ${proc.termVazio}`;
             } else {
                 title.innerText = proc.exportador || 'Processo de Exportação';
-                subtitle.innerText = `Booking: ${proc.booking} | Ref: ${proc.referencia} | Navio: ${proc.navio}`;
+                subtitle.innerText = `Booking: ${proc.booking} | Ref: ${proc.referencia} | Navio: ${proc.navio} | Armador: ${proc.armador}`;
             }
 
-            // Exibir alerta embraport
+            // Alerta embraport
             let hasEmbraport = false;
             if(proc.type === 'import' && proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) hasEmbraport = true;
             if(proc.type === 'export' && proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport'))) hasEmbraport = true;
@@ -491,19 +520,60 @@
             if(hasEmbraport) alertBox.classList.remove('hidden');
             else alertBox.classList.add('hidden');
 
+            // Renderizar área de contêineres
             ctArea.innerHTML = '';
+
+            // Botão de Adicionar Contêiner Dinâmico (Útil para Exportação onde chega depois)
+            if(proc.status === 'active') {
+                ctArea.innerHTML += `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-white">Unidades (${proc.containers.length})</h3>
+                    <button onclick="addNewContainerToProcess('${proc.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg shadow transition"><i class="fas fa-plus mr-2"></i>Novo Contêiner</button>
+                </div>`;
+            }
+
+            if(proc.containers.length === 0) {
+                ctArea.innerHTML += `<div class="text-center p-8 text-slate-500 border border-dashed border-slate-700 rounded-lg">Nenhum contêiner adicionado a este processo.</div>`;
+            }
             
             proc.containers.forEach((ct, index) => {
                 const ctBlock = document.createElement('div');
-                ctBlock.className = "bg-white p-4 rounded shadow-sm border mb-4";
+                ctBlock.className = "bg-navy-900 p-5 rounded-xl shadow-inner border border-slate-700 mb-5 relative";
                 
-                let ctHeader = `<div class="border-b pb-2 mb-3"><h4 class="font-bold text-gray-800">Contêiner: ${ct.numero} <span class="text-xs text-gray-500 font-normal ml-2">(${ct.tipo})</span></h4>`;
+                // HEADER DO CONTÊINER COM CAMPOS EDITÁVEIS PARA NUMERO E TIPO
+                let ctHeader = `
+                <div class="border-b border-slate-700 pb-4 mb-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Contêiner ${index + 1}</span>
+                        ${proc.status === 'active' ? `<button onclick="deleteContainerFromProcess('${proc.id}', '${ct.id}')" class="text-slate-600 hover:text-red-500 transition" title="Remover"><i class="fas fa-trash"></i></button>` : ''}
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-500 mb-1">Numeração</label>
+                            <input type="text" placeholder="Sem Número" value="${ct.numero || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-500 mb-1">Tipo / Equipamento</label>
+                            <input type="text" placeholder="Ex: 40HC" value="${ct.tipo || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                        </div>
+                    </div>`;
                 
                 if(proc.type === 'export') {
-                    ctHeader += `<div class="text-xs text-gray-600 mt-1">Tara: ${ct.tara || '-'} | Lacre: ${ct.lacre || '-'}</div>`;
+                    ctHeader += `
+                    <div class="grid grid-cols-2 gap-4 mt-3">
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-500 mb-1">Tara</label>
+                            <input type="text" placeholder="Tara" value="${ct.tara || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'tara', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase text-slate-500 mb-1">Lacre</label>
+                            <input type="text" placeholder="Lacre" value="${ct.lacre || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'lacre', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                        </div>
+                    </div>`;
                 }
                 ctHeader += `</div>`;
                 
+                // BODY COM CHECKLISTS E DATAS
                 let ctBody = '';
                 if(proc.type === 'import') {
                     ctBody = `<div class="space-y-2">`;
@@ -512,43 +582,43 @@
                         if(step.type === 'checkbox') {
                             const checked = val === 'true' ? 'checked' : '';
                             ctBody += `
-                            <label class="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-50 p-1 rounded cursor-pointer">
-                                <input type="checkbox" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.checked)" ${checked} ${proc.status === 'archived' ? 'disabled' : ''} class="w-4 h-4 text-blue-600">
+                            <label class="flex items-center gap-3 text-sm text-slate-300 hover:bg-navy-800 p-2 rounded cursor-pointer transition border border-transparent hover:border-slate-700">
+                                <input type="checkbox" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.checked)" ${checked} ${proc.status === 'archived' ? 'disabled' : ''} class="w-4 h-4 accent-blue-500 bg-navy-800 border-slate-600 rounded">
                                 ${step.label}
                             </label>`;
                         } else if(step.type === 'datetime') {
                             ctBody += `
-                            <div class="flex items-center justify-between text-sm text-gray-700 bg-gray-50 p-2 rounded">
-                                <span>${step.label}</span>
-                                <input type="datetime-local" value="${val}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="border rounded p-1 text-xs w-48">
+                            <div class="flex items-center justify-between text-sm text-slate-300 bg-navy-800 p-3 rounded-lg border border-slate-700">
+                                <span class="font-medium">${step.label}</span>
+                                <input type="datetime-local" value="${val}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded p-1.5 text-xs text-white focus:border-blue-500 outline-none w-48">
                             </div>`;
                         }
                     });
                     ctBody += `</div>`;
                 } else {
-                    // Export Checklist/Deadlines
+                    // Export Deadlines
                     ctBody = `
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">Deadline Draft</label>
-                            <input type="datetime-local" value="${ct.deadlineDraft || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full border rounded p-1 text-xs mt-1">
+                    <div class="grid grid-cols-2 gap-5 text-sm">
+                        <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Draft</label>
+                            <input type="datetime-local" value="${ct.deadlineDraft || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">Deadline Carga</label>
-                            <input type="datetime-local" value="${ct.deadlineCarga || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full border rounded p-1 text-xs mt-1">
+                        <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Carga</label>
+                            <input type="datetime-local" value="${ct.deadlineCarga || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">Retirada Vazio (Terminal / Data)</label>
-                            <div class="flex gap-1 mt-1">
-                                <input type="text" placeholder="Terminal" value="${ct.termVazioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termVazioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
-                                <input type="datetime-local" value="${ct.agVazio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
+                        <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Retirada Vazio</label>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" placeholder="Local / Terminal" value="${ct.termVazioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termVazioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <input type="datetime-local" value="${ct.agVazio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600">Depósito Cheio (Terminal / Data)</label>
-                            <div class="flex gap-1 mt-1">
-                                <input type="text" placeholder="Terminal" value="${ct.termCheioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termCheioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
-                                <input type="datetime-local" value="${ct.agCheio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-1/2 border rounded p-1 text-xs">
+                        <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
+                            <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Depósito Cheio</label>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" placeholder="Local / Terminal" value="${ct.termCheioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termCheioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <input type="datetime-local" value="${ct.agCheio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                             </div>
                         </div>
                     </div>`;
@@ -566,12 +636,7 @@
             }
         };
 
-        window.closeModal = () => {
-            currentViewingProcessId = null;
-            document.getElementById('process-modal').classList.add('hidden');
-            document.getElementById('process-modal').classList.remove('flex');
-        };
-
+        // FUNÇÕES DE ATUALIZAÇÃO NO FIREBASE (AUTO-SAVE)
         window.updateChecklist = async (procId, ctId, fieldId, value) => {
             const proc = processes.find(p => p.id === procId);
             const ctIndex = proc.containers.findIndex(c => c.id === ctId);
@@ -588,6 +653,44 @@
             await updateDoc(ref, { containers: proc.containers });
         };
 
+        // ADICIONAR E REMOVER CONTÊINERES APÓS A CRIAÇÃO DO PROCESSO
+        window.addNewContainerToProcess = async (procId) => {
+            const proc = processes.find(p => p.id === procId);
+            const ref = doc(db, "processes", procId);
+            
+            const newCt = {
+                id: `c_${Date.now()}_new`,
+                numero: '',
+                tipo: '',
+                checklist: {}
+            };
+            
+            if(proc.type === 'import') {
+                importChecklistSteps.forEach(step => newCt.checklist[step.id] = '');
+            } else {
+                newCt.tara = '';
+                newCt.lacre = '';
+                newCt.deadlineDraft = '';
+                newCt.deadlineCarga = '';
+                newCt.agVazio = '';
+                newCt.termVazioExp = '';
+                newCt.agCheio = '';
+                newCt.termCheioExp = '';
+            }
+            
+            proc.containers.push(newCt);
+            await updateDoc(ref, { containers: proc.containers });
+        };
+
+        window.deleteContainerFromProcess = async (procId, ctId) => {
+            if(confirm("Remover este contêiner do processo?")) {
+                const proc = processes.find(p => p.id === procId);
+                const ref = doc(db, "processes", procId);
+                proc.containers = proc.containers.filter(c => c.id !== ctId);
+                await updateDoc(ref, { containers: proc.containers });
+            }
+        };
+
         window.archiveProcess = async (procId) => {
             if(confirm("Tem certeza que deseja mover este processo para Arquivados?")) {
                 const ref = doc(db, "processes", procId);
@@ -596,5 +699,20 @@
             }
         };
     </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+    </style>
 </body>
 </html>
