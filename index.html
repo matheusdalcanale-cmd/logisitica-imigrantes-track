@@ -10,15 +10,41 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
+        // Paleta baseada na assinatura de e-mail da Transportes Imigrantes
+        // (vermelho da marca + cinza do logo + texto quase-preto), em tons
+        // claros e suaves (sem branco puro/forte) no lugar do tema escuro
+        // original. Reaproveitamos os MESMOS nomes de classe (navy-900/800/700,
+        // slate-*, blue-*) só trocando os valores hex, para não precisar mexer
+        // em cada elemento do app.
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         navy: {
-                            900: '#0f172a', // slate-900 base
-                            800: '#1e293b', // slate-800 cards
-                            700: '#334155', // slate-700 inputs
-                        }
+                            900: '#F4F2EE', // fundo da página (cinza bem suave, não é branco)
+                            800: '#FEFDFB', // superfície dos cards/painéis (quase branco, levemente quente)
+                            700: '#ECE8E2', // preenchimento dos campos de formulário
+                        },
+                        slate: {
+                            200: '#1F1F1F', // texto secundário mais forte (ex: valor do Doc/Booking)
+                            300: '#2A2A2A', // texto principal do corpo
+                            400: '#5C5A57', // rótulos e texto secundário
+                            500: '#6E6C6B', // texto/ícones apagados (tom do cinza do logo, escurecido para manter contraste legível)
+                            600: '#D8D4CE', // bordas de input
+                            700: '#EAE7E2', // bordas de cards/painéis (bem sutil)
+                        },
+                        blue: { // usado como cor de destaque -> vermelho da marca
+                            300: '#8C0206',
+                            400: '#C1080B',
+                            500: '#D62A2E',
+                            600: '#B10004',
+                            800: '#B23239',
+                            900: '#7A0209',
+                        },
+                        red: { 400: '#C8272D' }, // texto de erro/exclusão legível no fundo claro
+                        emerald: { 400: '#0B7D54' }, // texto de sucesso legível no fundo claro
+                        yellow: { 400: '#92400E', 500: '#B45309' }, // texto do alerta Embraport legível
+                        ink: '#1A1A1A' // texto escuro (substitui o "branco" do tema antigo)
                     },
                     fontFamily: {
                         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
@@ -39,7 +65,7 @@
                 <div class="w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-800/60 flex items-center justify-center mb-4">
                     <i class="fas fa-truck-fast text-blue-400 text-lg"></i>
                 </div>
-                <h2 class="text-xl font-bold text-white tracking-tight">LogiTrack</h2>
+                <h2 class="text-xl font-bold text-ink tracking-tight">LogiTrack</h2>
                 <p class="text-[11px] text-slate-500 uppercase tracking-widest mt-1">Gestão Logística</p>
             </div>
             <form id="login-form" class="space-y-4">
@@ -47,19 +73,19 @@
                     <label class="block text-sm font-medium text-slate-400 mb-1.5">E-mail</label>
                     <div class="relative">
                         <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                        <input type="email" id="auth-email" required class="w-full rounded-lg bg-navy-700 border border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-9 pr-3 py-2.5 outline-none transition">
+                        <input type="email" id="auth-email" required class="w-full rounded-lg bg-navy-700 border border-slate-600 text-ink focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-9 pr-3 py-2.5 outline-none transition">
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-400 mb-1.5">Senha</label>
                     <div class="relative">
                         <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                        <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-navy-700 border border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-9 pr-3 py-2.5 outline-none transition">
+                        <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-navy-700 border border-slate-600 text-ink focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-9 pr-3 py-2.5 outline-none transition">
                     </div>
                 </div>
                 <div class="text-red-400 text-sm hidden bg-red-900/20 p-2.5 rounded-lg border border-red-800" id="auth-error"></div>
                 <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-500 active:scale-[0.99] transition shadow-lg shadow-blue-900/50">Entrar</button>
-                <p class="text-xs text-slate-500 text-center pt-2 flex items-center justify-center gap-1.5"><i class="fas fa-shield-halved text-slate-600"></i>Acesso restrito a contas criadas pelo administrador.</p>
+                <p class="text-xs text-slate-500 text-center pt-2 flex items-center justify-center gap-1.5"><i class="fas fa-shield-halved text-slate-500"></i>Acesso restrito a contas criadas pelo administrador.</p>
             </form>
         </div>
     </div>
@@ -71,9 +97,9 @@
                 <div class="w-8 h-8 rounded-lg bg-blue-600/15 border border-blue-800/60 flex items-center justify-center">
                     <i class="fas fa-truck-fast text-blue-400 text-sm"></i>
                 </div>
-                <h1 class="text-base font-bold text-white tracking-tight">LogiTrack</h1>
+                <h1 class="text-base font-bold text-ink tracking-tight">LogiTrack</h1>
             </div>
-            <button id="btn-logout" title="Sair" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-navy-700 transition flex items-center justify-center"><i class="fas fa-sign-out-alt text-sm"></i></button>
+            <button id="btn-logout" title="Sair" class="w-8 h-8 rounded-lg text-slate-400 hover:text-ink hover:bg-navy-700 transition flex items-center justify-center"><i class="fas fa-sign-out-alt text-sm"></i></button>
         </div>
 
         <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
@@ -81,7 +107,7 @@
 
             <div class="flex gap-1 mb-6 bg-navy-900 p-1 rounded-lg border border-slate-700">
                 <button id="btn-type-import" class="flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200">Importação</button>
-                <button id="btn-type-export" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition-all duration-200">Exportação</button>
+                <button id="btn-type-export" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-ink transition-all duration-200">Exportação</button>
             </div>
 
             <form id="process-form" class="space-y-4">
@@ -91,15 +117,15 @@
                 <div id="fields-common" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Armador</label>
-                        <input type="text" id="f-armador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition" required>
+                        <input type="text" id="f-armador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition" required>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Motorista</label>
-                        <input type="text" id="f-motorista" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-motorista" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Placas do Caminhão</label>
-                        <input type="text" id="f-placas" maxlength="150" placeholder="Ex: ABC1D23 e XYZ9F87" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-placas" maxlength="150" placeholder="Ex: ABC1D23 e XYZ9F87" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
                     </div>
                 </div>
 
@@ -107,29 +133,29 @@
                 <div id="fields-import" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Importador</label>
-                        <input type="text" id="f-importador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-importador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">DI / DTA / DUIMP</label>
                         <div class="flex gap-2">
-                            <select id="f-documento-tipo" class="w-28 p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                            <select id="f-documento-tipo" class="w-28 p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                                 <option value="">Tipo</option>
                                 <option value="DI">DI</option>
                                 <option value="DTA">DTA</option>
                                 <option value="DUIMP">DUIMP</option>
                             </select>
-                            <input type="text" id="f-documento-numero" maxlength="150" placeholder="Número do documento" class="flex-1 p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition">
+                            <input type="text" id="f-documento-numero" maxlength="150" placeholder="Número do documento" class="flex-1 p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Carregamento</label>
-                        <select id="f-term-carga" onchange="handleTerminalSelectForm(this, 'cheio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <select id="f-term-carga" onchange="handleTerminalSelectForm(this, 'cheio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                             <option value="">Selecione...</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Vazio</label>
-                        <select id="f-term-vazio" onchange="handleTerminalSelectForm(this, 'vazio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <select id="f-term-vazio" onchange="handleTerminalSelectForm(this, 'vazio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                             <option value="">Selecione...</option>
                         </select>
                     </div>
@@ -139,24 +165,24 @@
                 <div id="fields-export" class="space-y-4 hidden">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Exportador</label>
-                        <input type="text" id="f-exportador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-exportador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Referência do Processo</label>
-                        <input type="text" id="f-referencia" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-referencia" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Número do Booking</label>
-                        <input type="text" id="f-booking" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-booking" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Nome do Navio</label>
-                        <input type="text" id="f-navio" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-navio" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
                     </div>
                 </div>
 
                 <div class="border-t border-slate-700 pt-5 mt-5">
-                    <h3 class="text-sm font-bold text-white mb-3 flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-ink mb-3 flex justify-between items-center">
                         Contêineres Iniciais
                         <button type="button" id="btn-add-container" class="text-blue-400 hover:text-blue-300 text-xs font-semibold transition flex items-center gap-1"><i class="fas fa-plus text-[10px]"></i> Adicionar</button>
                     </h3>
@@ -197,11 +223,11 @@
                 <div>
                     <div class="flex gap-3 items-center mb-1">
                         <span id="m-type-badge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-900/50 text-blue-400 border border-blue-800 uppercase tracking-wider"></span>
-                        <h2 id="m-title" class="text-2xl font-bold text-white tracking-tight"></h2>
+                        <h2 id="m-title" class="text-2xl font-bold text-ink tracking-tight"></h2>
                     </div>
                     <p id="m-subtitle" class="text-sm text-slate-400 mt-1"></p>
                 </div>
-                <button onclick="closeModal()" title="Fechar" class="w-9 h-9 rounded-full text-slate-500 hover:text-white hover:bg-navy-700 text-xl transition flex items-center justify-center shrink-0">&times;</button>
+                <button onclick="closeModal()" title="Fechar" class="w-9 h-9 rounded-full text-slate-500 hover:text-ink hover:bg-navy-700 text-xl transition flex items-center justify-center shrink-0">&times;</button>
             </div>
 
             <!-- Alerta Embraport -->
@@ -445,12 +471,12 @@
 
             if (type === 'import') {
                 btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200';
-                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition-all duration-200 bg-transparent';
+                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-ink transition-all duration-200 bg-transparent';
                 fImport.classList.remove('hidden');
                 fExport.classList.add('hidden');
             } else {
                 btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200';
-                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition-all duration-200 bg-transparent';
+                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-ink transition-all duration-200 bg-transparent';
                 fExport.classList.remove('hidden');
                 fImport.classList.add('hidden');
             }
@@ -495,8 +521,8 @@
                     <button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="w-6 h-6 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-900/20 text-xs transition flex items-center justify-center"><i class="fas fa-trash"></i></button>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-2">
-                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded-md outline-none focus:border-blue-500 transition">
-                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded-md outline-none focus:border-blue-500 transition">
+                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
+                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
                 </div>`;
                 
             div.innerHTML = html;
@@ -640,7 +666,7 @@
             if(filtered.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-16 px-6 text-slate-500 bg-navy-800/60 rounded-2xl border border-dashed border-slate-700">
-                        <i class="fas fa-inbox text-2xl text-slate-600 mb-3"></i>
+                        <i class="fas fa-inbox text-2xl text-slate-500 mb-3"></i>
                         <p class="text-sm">Nenhum processo encontrado nesta visão.</p>
                     </div>`;
                 return;
@@ -675,7 +701,7 @@
                     <div class="flex items-center gap-6 w-full">
                         <div class="w-1/3">
                             <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">${proc.type === 'import' ? 'Importação' : 'Exportação'} ${embraportAlert}</div>
-                            <div class="font-bold text-white text-lg truncate group-hover:text-blue-400 transition-colors">${escapeHtml(title) || 'Sem Nome'}</div>
+                            <div class="font-bold text-ink text-lg truncate group-hover:text-blue-400 transition-colors">${escapeHtml(title) || 'Sem Nome'}</div>
                             <div class="text-xs text-slate-400 mt-1.5"><i class="fas fa-ship mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.armador) || 'N/A'}</div>
                             <div class="text-xs text-slate-500 mt-1"><i class="fas fa-id-badge mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.motorista) || 'Motorista N/D'} <span class="mx-1 opacity-40">•</span><i class="fas fa-truck mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.placas) || 'Placas N/D'}</div>
                         </div>
@@ -763,11 +789,11 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] uppercase text-slate-500 mb-1">Motorista</label>
-                        <input type="text" placeholder="Nome do motorista" maxlength="150" value="${escapeHtml(proc.motorista)}" onchange="updateProcessField('${proc.id}', 'motorista', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
+                        <input type="text" placeholder="Nome do motorista" maxlength="150" value="${escapeHtml(proc.motorista)}" onchange="updateProcessField('${proc.id}', 'motorista', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase text-slate-500 mb-1">Placas</label>
-                        <input type="text" placeholder="Ex: ABC1D23 e XYZ9F87" maxlength="150" value="${escapeHtml(proc.placas)}" onchange="updateProcessField('${proc.id}', 'placas', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
+                        <input type="text" placeholder="Ex: ABC1D23 e XYZ9F87" maxlength="150" value="${escapeHtml(proc.placas)}" onchange="updateProcessField('${proc.id}', 'placas', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
                     </div>
                 </div>
             </div>`;
@@ -776,7 +802,7 @@
             if(proc.status === 'active') {
                 ctArea.innerHTML += `
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-bold text-white tracking-tight">Unidades (${proc.containers.length})</h3>
+                    <h3 class="text-lg font-bold text-ink tracking-tight">Unidades (${proc.containers.length})</h3>
                     <button onclick="addNewContainerToProcess('${proc.id}')" class="bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white text-sm font-semibold px-4 py-2 rounded-lg shadow transition"><i class="fas fa-plus mr-2"></i>Novo Contêiner</button>
                 </div>`;
             }
@@ -794,16 +820,16 @@
                 <div class="border-b border-slate-700 pb-4 mb-4">
                     <div class="flex justify-between items-start mb-3">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Contêiner ${index + 1}</span>
-                        ${proc.status === 'active' ? `<button onclick="deleteContainerFromProcess('${proc.id}', '${ct.id}')" title="Remover" class="w-7 h-7 rounded-md text-slate-600 hover:text-red-400 hover:bg-red-900/20 transition flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>` : ''}
+                        ${proc.status === 'active' ? `<button onclick="deleteContainerFromProcess('${proc.id}', '${ct.id}')" title="Remover" class="w-7 h-7 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-900/20 transition flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>` : ''}
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Numeração</label>
-                            <input type="text" placeholder="Sem Número" value="${escapeHtml(ct.numero)}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
+                            <input type="text" placeholder="Sem Número" value="${escapeHtml(ct.numero)}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tipo / Equipamento</label>
-                            <input type="text" placeholder="Ex: 40HC" value="${escapeHtml(ct.tipo)}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
+                            <input type="text" placeholder="Ex: 40HC" value="${escapeHtml(ct.tipo)}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
                         </div>
                     </div>`;
 
@@ -812,11 +838,11 @@
                     <div class="grid grid-cols-2 gap-4 mt-3">
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tara</label>
-                            <input type="text" placeholder="Tara" value="${escapeHtml(ct.tara)}" onchange="updateField('${proc.id}', '${ct.id}', 'tara', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
+                            <input type="text" placeholder="Tara" value="${escapeHtml(ct.tara)}" onchange="updateField('${proc.id}', '${ct.id}', 'tara', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Lacre</label>
-                            <input type="text" placeholder="Lacre" value="${escapeHtml(ct.lacre)}" onchange="updateField('${proc.id}', '${ct.id}', 'lacre', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
+                            <input type="text" placeholder="Lacre" value="${escapeHtml(ct.lacre)}" onchange="updateField('${proc.id}', '${ct.id}', 'lacre', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
                         </div>
                     </div>`;
                 }
@@ -849,7 +875,7 @@
                             <div class="${rowClass}">
                                 <span class="font-medium ${isAgendado ? 'text-slate-200' : ''}">${step.label}</span>
                                 <div class="flex items-center gap-2">
-                                    <input type="datetime-local" value="${escapeHtml(val)}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded-md p-1.5 text-xs text-white focus:border-blue-500 outline-none w-44 transition">
+                                    <input type="datetime-local" value="${escapeHtml(val)}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded-md p-1.5 text-xs text-ink focus:border-blue-500 outline-none w-44 transition">
                                     <label class="flex items-center gap-1 cursor-pointer" title="Marcar como agendado">
                                         <input type="checkbox" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}_check', this.checked)" ${agendadoChecked} ${proc.status === 'archived' ? 'disabled' : ''} class="w-4 h-4 accent-emerald-500 bg-navy-800 border-slate-600 rounded">
                                     </label>
@@ -864,24 +890,24 @@
                     <div class="grid grid-cols-2 gap-5 text-sm">
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Draft</label>
-                            <input type="datetime-local" value="${escapeHtml(ct.deadlineDraft)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
+                            <input type="datetime-local" value="${escapeHtml(ct.deadlineDraft)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-ink focus:border-blue-500 outline-none transition">
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Carga</label>
-                            <input type="datetime-local" value="${escapeHtml(ct.deadlineCarga)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
+                            <input type="datetime-local" value="${escapeHtml(ct.deadlineCarga)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-ink focus:border-blue-500 outline-none transition">
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Retirada Vazio</label>
                             <div class="flex flex-col gap-2">
-                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termVazioExp', 'vazio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">${buildTerminalOptions('vazio', ct.termVazioExp)}</select>
-                                <input type="datetime-local" value="${escapeHtml(ct.agVazio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
+                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termVazioExp', 'vazio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-ink focus:border-blue-500 outline-none transition">${buildTerminalOptions('vazio', ct.termVazioExp)}</select>
+                                <input type="datetime-local" value="${escapeHtml(ct.agVazio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-ink focus:border-blue-500 outline-none transition">
                             </div>
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Depósito Cheio</label>
                             <div class="flex flex-col gap-2">
-                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termCheioExp', 'cheio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">${buildTerminalOptions('cheio', ct.termCheioExp)}</select>
-                                <input type="datetime-local" value="${escapeHtml(ct.agCheio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
+                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termCheioExp', 'cheio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-ink focus:border-blue-500 outline-none transition">${buildTerminalOptions('cheio', ct.termCheioExp)}</select>
+                                <input type="datetime-local" value="${escapeHtml(ct.agCheio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-ink focus:border-blue-500 outline-none transition">
                             </div>
                         </div>
                     </div>`;
@@ -1003,21 +1029,20 @@
             width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: #F4F2EE;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: #D8D4CE;
             border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+            background: #BFBAB2;
         }
 
         /* Faz os controles nativos (calendário do datetime-local, lista do
-           select, checkbox) desenharem na variante escura do navegador, em
-           vez do branco padrão que destoa do resto da tela. */
+           select, checkbox) desenharem na variante clara do navegador. */
         input, select {
-            color-scheme: dark;
+            color-scheme: light;
         }
 
         /* Select com seta própria (discreta, na mesma paleta), no lugar da
@@ -1025,7 +1050,7 @@
         select {
             appearance: none;
             -webkit-appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235C5A57'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 0.65rem center;
             background-size: 1.1em;
@@ -1036,7 +1061,7 @@
            têm um estilo de foco próprio (inputs/selects já têm via Tailwind). */
         button:focus-visible, a:focus-visible {
             outline: none;
-            box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px #3b82f6;
+            box-shadow: 0 0 0 2px #F4F2EE, 0 0 0 4px #B10004;
             border-radius: 0.5rem;
         }
 
