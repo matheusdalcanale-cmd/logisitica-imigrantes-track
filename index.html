@@ -117,7 +117,9 @@
                 <div id="fields-common" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Armador</label>
-                        <input type="text" id="f-armador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition" required>
+                        <select id="f-armador" onchange="handleArmadorSelectForm(this)" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition" required>
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Motorista</label>
@@ -286,6 +288,10 @@
         // Cheio); "vazio" = terminais de devolução/retirada de vazio.
         let terminaisCadastrados = { vazio: [], cheio: [] };
 
+        // Lista de armadores pré-cadastrados, compartilhada com toda a equipe
+        // (documento único em config/armadores).
+        let armadoresCadastrados = [];
+
         const loginScreen = document.getElementById('login-screen');
         const sidebar = document.getElementById('sidebar');
         const mainPanel = document.getElementById('main-panel');
@@ -414,6 +420,68 @@
             }
         };
 
+        // ARMADORES PRÉ-CADASTRADOS (lista compartilhada com a equipe)
+        const buildArmadorOptions = (valorSelecionado) => {
+            const lista = armadoresCadastrados || [];
+            let html = `<option value="">Selecione...</option>`;
+            lista.forEach(nome => {
+                const selecionado = nome === valorSelecionado ? 'selected' : '';
+                html += `<option value="${escapeHtml(nome)}" ${selecionado}>${escapeHtml(nome)}</option>`;
+            });
+            // Se o valor salvo não está (mais) na lista cadastrada (ex.: dado antigo
+            // digitado como texto livre antes dessa mudança), mostra mesmo assim.
+            if (valorSelecionado && !lista.includes(valorSelecionado)) {
+                html += `<option value="${escapeHtml(valorSelecionado)}" selected>${escapeHtml(valorSelecionado)} (não cadastrado)</option>`;
+            }
+            html += `<option value="__novo__">+ Adicionar novo armador...</option>`;
+            return html;
+        };
+
+        // Redesenha o select de armador do formulário lateral (Novo Processo),
+        // preservando o valor já escolhido.
+        const renderArmadorSelectInSidebar = () => {
+            const selArmador = document.getElementById('f-armador');
+            if (selArmador) {
+                const atual = selArmador.value === '__novo__' ? '' : selArmador.value;
+                selArmador.innerHTML = buildArmadorOptions(atual);
+            }
+        };
+
+        // Carrega/observa em tempo real a lista compartilhada de armadores.
+        const loadArmadores = () => {
+            const ref = doc(db, "config", "armadores");
+            onSnapshot(ref, (snap) => {
+                const data = snap.exists() ? snap.data() : {};
+                armadoresCadastrados = data.lista || [];
+                renderArmadorSelectInSidebar();
+            });
+        };
+
+        // Pede o nome do novo armador e adiciona na lista compartilhada (sem duplicar).
+        // Retorna o nome adicionado, ou null se o usuário cancelou.
+        window.adicionarNovoArmador = async () => {
+            const nome = prompt('Nome do novo armador:');
+            if (!nome || !nome.trim()) return null;
+            const nomeLimpo = nome.trim().slice(0, 150);
+            const atual = armadoresCadastrados || [];
+            if (!atual.includes(nomeLimpo)) {
+                const novaLista = [...atual, nomeLimpo].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                const ref = doc(db, "config", "armadores");
+                await setDoc(ref, { lista: novaLista }, { merge: true });
+            }
+            return nomeLimpo;
+        };
+
+        // onchange do select de armador do formulário lateral (novo processo).
+        window.handleArmadorSelectForm = async (selectEl) => {
+            if (selectEl.value === '__novo__') {
+                const novoNome = await window.adicionarNovoArmador();
+                renderArmadorSelectInSidebar();
+                const el = document.getElementById(selectEl.id);
+                if (el) el.value = novoNome || '';
+            }
+        };
+
         // AUTENTICAÇÃO
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -424,6 +492,7 @@
                 document.getElementById('user-display').innerHTML = `<span class="w-5 h-5 rounded-full bg-blue-600/20 text-blue-400 text-[10px] font-bold flex items-center justify-center">${escapeHtml((user.email || '?').charAt(0).toUpperCase())}</span><span>${escapeHtml(user.email)}</span>`;
                 loadProcesses();
                 loadTerminais();
+                loadArmadores();
             } else {
                 currentUser = null;
                 loginScreen.classList.remove('hidden');
