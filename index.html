@@ -38,8 +38,8 @@
                     <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-navy-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2.5 outline-none transition">
                 </div>
                 <div class="text-red-400 text-sm hidden bg-red-900/20 p-2 rounded border border-red-800" id="auth-error"></div>
-                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">Entrar / Cadastrar</button>
-                <p class="text-xs text-slate-500 text-center mt-4">Se o e-mail não existir, uma nova conta será criada automaticamente.</p>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">Entrar</button>
+                <p class="text-xs text-slate-500 text-center mt-4">Acesso restrito. Apenas contas criadas pelo administrador podem entrar.</p>
             </form>
         </div>
     </div>
@@ -204,7 +204,7 @@
     <!-- Firebase SDKs e Lógica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -245,12 +245,25 @@
         // CHECKLIST ORDER IMPORT (Exatamente como solicitado)
         const importChecklistSteps = [
             { id: 'ag_carga', label: 'Agendamento de Carregamento', type: 'datetime' },
-            { id: 'ag_vazio', label: 'Agendamento de Vazio', type: 'datetime' },
-            { id: 'gerar_cte', label: 'Gerar CTE', type: 'checkbox' },
+            { id: 'gerar_cte', label: 'Gerar CTe', type: 'checkbox' },
             { id: 'gerar_ciot', label: 'Gerar CIOT', type: 'checkbox' },
             { id: 'gerar_mdfe', label: 'Gerar MDFE', type: 'checkbox' },
-            { id: 'encerrar_mdfe', label: 'Encerrar MDFE', type: 'checkbox' }
+            { id: 'encerrar_mdfe', label: 'Encerrar MDFE', type: 'checkbox' },
+            { id: 'ag_vazio', label: 'Agendamento de Vazio', type: 'datetime' }
         ];
+
+        // Monta um objeto de checklist "zerado" para um novo contêiner de importação.
+        // Para cada etapa do tipo datetime, além do valor da data/hora, criamos um
+        // campo extra "<id>_check" (booleano em string) usado só para marcar que
+        // aquele agendamento já foi confirmado — é o que alimenta a barra de progresso.
+        const novoChecklistImport = () => {
+            const checklist = {};
+            importChecklistSteps.forEach(step => {
+                checklist[step.id] = '';
+                if (step.type === 'datetime') checklist[`${step.id}_check`] = '';
+            });
+            return checklist;
+        };
 
         // AUTENTICAÇÃO
         onAuthStateChanged(auth, (user) => {
@@ -269,28 +282,27 @@
             }
         });
 
+        // SEGURANÇA: apenas login, sem auto-cadastro. Só entra quem já tem uma
+        // conta criada manualmente pelo administrador em Firebase Console >
+        // Authentication > Users > Add user. Nenhum novo usuário é criado a
+        // partir desta tela.
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             const errorDiv = document.getElementById('auth-error');
-            
+
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 errorDiv.classList.add('hidden');
             } catch (error) {
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                        errorDiv.classList.add('hidden');
-                    } catch (createError) {
-                        errorDiv.innerText = "Erro ao criar conta: " + createError.message;
-                        errorDiv.classList.remove('hidden');
-                    }
+                const semAcesso = ['auth/user-not-found', 'auth/invalid-credential', 'auth/wrong-password'];
+                if (semAcesso.includes(error.code)) {
+                    errorDiv.innerText = "E-mail ou senha incorretos, ou esta conta ainda não foi cadastrada pelo administrador.";
                 } else {
                     errorDiv.innerText = "Erro no login: " + error.message;
-                    errorDiv.classList.remove('hidden');
                 }
+                errorDiv.classList.remove('hidden');
             }
         });
 
@@ -413,7 +425,7 @@
                 };
                 
                 if (type === 'import') {
-                    importChecklistSteps.forEach(step => ct.checklist[step.id] = '');
+                    ct.checklist = novoChecklistImport();
                 } else {
                     ct.tara = '';
                     ct.lacre = '';
@@ -457,6 +469,38 @@
             });
         };
 
+        // Calcula o progresso (0-100) de um processo, para a barrinha do card.
+        // Importação: conta as etapas do checklist (checkboxes + os checkmarks de
+        // agendamento) marcadas como concluídas, em todos os contêineres.
+        // Exportação: conta os campos de prazo/agendamento preenchidos.
+        const getProcessProgress = (proc) => {
+            if (!proc.containers || proc.containers.length === 0) return 0;
+            let total = 0, done = 0;
+
+            if (proc.type === 'import') {
+                proc.containers.forEach(ct => {
+                    importChecklistSteps.forEach(step => {
+                        total++;
+                        if (step.type === 'checkbox') {
+                            if (ct.checklist && ct.checklist[step.id] === 'true') done++;
+                        } else if (step.type === 'datetime') {
+                            if (ct.checklist && ct.checklist[`${step.id}_check`] === 'true') done++;
+                        }
+                    });
+                });
+            } else {
+                const exportFields = ['deadlineDraft', 'deadlineCarga', 'agVazio', 'agCheio'];
+                proc.containers.forEach(ct => {
+                    exportFields.forEach(f => {
+                        total++;
+                        if (ct[f]) done++;
+                    });
+                });
+            }
+
+            return total === 0 ? 0 : Math.round((done / total) * 100);
+        };
+
         // RENDERIZAR CARTÕES (TELA PRINCIPAL)
         const renderProcesses = () => {
             const container = document.getElementById('processes-container');
@@ -491,10 +535,13 @@
                                        (proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport')))
                                        ? `<i class="fas fa-exclamation-triangle text-yellow-500 ml-2" title="Alerta Embraport"></i>` : '';
 
+                const progress = getProcessProgress(proc);
+                const progressColor = progress === 100 ? 'bg-emerald-500' : 'bg-blue-500';
+
                 const card = document.createElement('div');
-                card.className = "bg-navy-800 p-5 rounded-xl shadow-lg border border-slate-700 flex items-center justify-between cursor-pointer hover:border-blue-500 hover:shadow-blue-900/20 transition group";
+                card.className = "bg-navy-800 p-5 rounded-xl shadow-lg border border-slate-700 cursor-pointer hover:border-blue-500 hover:shadow-blue-900/20 transition group";
                 card.onclick = () => openModal(proc.id);
-                
+
                 card.innerHTML = `
                     <div class="flex items-center gap-6 w-full">
                         <div class="w-1/3">
@@ -510,6 +557,15 @@
                         <div class="w-1/3 flex flex-col items-end">
                             <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">${countBadgeText}</div>
                             <div class="flex flex-wrap gap-1.5 justify-end">${badges} ${extraBadges}</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-700/60">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Progresso</span>
+                            <span class="text-[10px] text-slate-400 font-bold">${progress}%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-navy-900 rounded-full overflow-hidden border border-slate-700">
+                            <div class="h-full ${progressColor} rounded-full transition-all duration-300" style="width:${progress}%"></div>
                         </div>
                     </div>
                 `;
@@ -647,10 +703,16 @@
                                 ${step.label}
                             </label>`;
                         } else if(step.type === 'datetime') {
+                            const agendadoChecked = ct.checklist[`${step.id}_check`] === 'true' ? 'checked' : '';
                             ctBody += `
                             <div class="flex items-center justify-between text-sm text-slate-300 bg-navy-800 p-3 rounded-lg border border-slate-700">
                                 <span class="font-medium">${step.label}</span>
-                                <input type="datetime-local" value="${escapeHtml(val)}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded p-1.5 text-xs text-white focus:border-blue-500 outline-none w-48">
+                                <div class="flex items-center gap-2">
+                                    <input type="datetime-local" value="${escapeHtml(val)}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded p-1.5 text-xs text-white focus:border-blue-500 outline-none w-44">
+                                    <label class="flex items-center gap-1 cursor-pointer" title="Marcar como agendado">
+                                        <input type="checkbox" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}_check', this.checked)" ${agendadoChecked} ${proc.status === 'archived' ? 'disabled' : ''} class="w-4 h-4 accent-emerald-500 bg-navy-800 border-slate-600 rounded">
+                                    </label>
+                                </div>
                             </div>`;
                         }
                     });
@@ -741,7 +803,7 @@
             };
             
             if(proc.type === 'import') {
-                importChecklistSteps.forEach(step => newCt.checklist[step.id] = '');
+                newCt.checklist = novoChecklistImport();
             } else {
                 newCt.tara = '';
                 newCt.lacre = '';
