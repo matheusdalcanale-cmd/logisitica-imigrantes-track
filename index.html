@@ -43,7 +43,7 @@
                         },
                         red: { 400: '#C8272D' }, // texto de erro/exclusão legível no fundo claro
                         emerald: { 400: '#0B7D54' }, // texto de sucesso legível no fundo claro
-                        yellow: { 400: '#92400E', 500: '#B45309' }, // texto do alerta Embraport legível
+                        yellow: { 400: '#92400E', 500: '#B45309' }, // texto de alertas em amarelo/âmbar, legível no fundo claro
                         ink: '#1A1A1A' // texto escuro (substitui o "branco" do tema antigo)
                     },
                     fontFamily: {
@@ -239,16 +239,6 @@
                     <p id="m-subtitle" class="text-sm text-slate-400 mt-1"></p>
                 </div>
                 <button onclick="closeModal()" title="Fechar" class="w-9 h-9 rounded-full text-slate-500 hover:text-ink hover:bg-navy-700 text-xl transition flex items-center justify-center shrink-0">&times;</button>
-            </div>
-
-            <!-- Alerta Embraport -->
-            <div id="m-embraport-alert" class="hidden bg-yellow-900/30 border-l-4 border-yellow-500 rounded-r-lg mx-5 mt-5 p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0"><i class="fas fa-exclamation-triangle text-yellow-500 mt-0.5"></i></div>
-                    <div class="ml-3">
-                        <p class="text-sm text-yellow-400 font-bold">Atenção: Operação Embraport detectada.</p>
-                    </div>
-                </div>
             </div>
 
             <!-- Alerta de Deadline Draft (só exportação) -->
@@ -858,10 +848,6 @@
                 const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded-md shadow-sm">${escapeHtml(c.numero)}</span>`).join(' ');
                 const extraBadges = validContainers.length > 3 ? `<span class="text-xs text-slate-500 px-1">+${validContainers.length - 3}</span>` : '';
 
-                const embraportAlert = (proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) ||
-                                       (proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport')))
-                                       ? `<i class="fas fa-exclamation-triangle text-yellow-500 ml-2" title="Alerta Embraport"></i>` : '';
-
                 const draftInfo = getDraftDeadlineInfo(proc);
                 const draftBadge = draftInfo
                     ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md text-[10px] font-bold ${draftAlertConfig[draftInfo.nivel].badge}"><i class="fas ${draftAlertConfig[draftInfo.nivel].icon}"></i>${escapeHtml(draftInfo.texto)}</div>`
@@ -878,7 +864,7 @@
                 card.innerHTML = `
                     <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full">
                         <div class="sm:w-1/3 min-w-0">
-                            <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">${proc.type === 'import' ? 'Importação' : 'Exportação'} ${embraportAlert}</div>
+                            <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">${proc.type === 'import' ? 'Importação' : 'Exportação'}</div>
                             <div class="font-bold text-ink text-lg truncate group-hover:text-blue-400 transition-colors">${escapeHtml(title) || 'Sem Nome'}</div>
                             <div class="text-xs text-slate-400 mt-1.5"><i class="fas fa-ship mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.armador) || 'N/A'}</div>
                             <div class="text-xs text-slate-500 mt-1"><i class="fas fa-id-badge mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.motorista) || 'Motorista N/D'} <span class="mx-1 opacity-40">•</span><i class="fas fa-truck mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.placas) || 'Placas N/D'}</div>
@@ -934,7 +920,6 @@
             const badge = document.getElementById('m-type-badge');
             const title = document.getElementById('m-title');
             const subtitle = document.getElementById('m-subtitle');
-            const alertBox = document.getElementById('m-embraport-alert');
             const btnArchive = document.getElementById('btn-archive-process');
             const btnUnarchive = document.getElementById('btn-unarchive-process');
             const btnDelete = document.getElementById('btn-delete-process');
@@ -949,14 +934,6 @@
                 title.innerText = proc.exportador || 'Processo de Exportação';
                 subtitle.innerText = `Booking: ${proc.booking} | Ref: ${proc.referencia} | Navio: ${proc.navio} | Armador: ${proc.armador}`;
             }
-
-            // Alerta embraport
-            let hasEmbraport = false;
-            if(proc.type === 'import' && proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) hasEmbraport = true;
-            if(proc.type === 'export' && proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport'))) hasEmbraport = true;
-            
-            if(hasEmbraport) alertBox.classList.remove('hidden');
-            else alertBox.classList.add('hidden');
 
             // Alerta de deadline draft (lembrete de 3/2/1 dia, só exportação)
             const draftAlertBox = document.getElementById('m-draft-alert');
