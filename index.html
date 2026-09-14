@@ -98,11 +98,15 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Carregamento</label>
-                        <input type="text" id="f-term-carga" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <select id="f-term-carga" onchange="handleTerminalSelectForm(this, 'cheio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Vazio</label>
-                        <input type="text" id="f-term-vazio" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <select id="f-term-vazio" onchange="handleTerminalSelectForm(this, 'vazio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
                 </div>
 
@@ -205,7 +209,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAKGjOftcyDZ-5yPA-5NK55GohtGlrfbeQ",
@@ -221,9 +225,15 @@
         const db = getFirestore(app);
 
         let currentUser = null;
-        let currentActiveTab = 'import'; 
+        let currentActiveTab = 'import';
         let processes = [];
         let currentViewingProcessId = null;
+
+        // Lista de terminais pré-cadastrados, compartilhada com toda a equipe
+        // (documento único em config/terminals). "cheio" = terminais onde se
+        // pega/deposita contêiner cheio (Terminal de Carregamento / Depósito
+        // Cheio); "vazio" = terminais de devolução/retirada de vazio.
+        let terminaisCadastrados = { vazio: [], cheio: [] };
 
         const loginScreen = document.getElementById('login-screen');
         const sidebar = document.getElementById('sidebar');
@@ -265,6 +275,94 @@
             return checklist;
         };
 
+        // TERMINAIS PRÉ-CADASTRADOS (lista compartilhada com a equipe)
+        const buildTerminalOptions = (categoria, valorSelecionado) => {
+            const lista = terminaisCadastrados[categoria] || [];
+            let html = `<option value="">Selecione...</option>`;
+            lista.forEach(nome => {
+                const selecionado = nome === valorSelecionado ? 'selected' : '';
+                html += `<option value="${escapeHtml(nome)}" ${selecionado}>${escapeHtml(nome)}</option>`;
+            });
+            // Se o valor salvo não está (mais) na lista cadastrada (ex.: dado antigo
+            // digitado como texto livre antes dessa mudança), mostra mesmo assim.
+            if (valorSelecionado && !lista.includes(valorSelecionado)) {
+                html += `<option value="${escapeHtml(valorSelecionado)}" selected>${escapeHtml(valorSelecionado)} (não cadastrado)</option>`;
+            }
+            html += `<option value="__novo__">+ Adicionar novo terminal...</option>`;
+            return html;
+        };
+
+        // Redesenha os dois selects de terminal do formulário lateral (Novo Processo),
+        // preservando o valor já escolhido.
+        const renderTerminalSelectsInSidebar = () => {
+            const selCarga = document.getElementById('f-term-carga');
+            const selVazio = document.getElementById('f-term-vazio');
+            if (selCarga) {
+                const atual = selCarga.value === '__novo__' ? '' : selCarga.value;
+                selCarga.innerHTML = buildTerminalOptions('cheio', atual);
+            }
+            if (selVazio) {
+                const atual = selVazio.value === '__novo__' ? '' : selVazio.value;
+                selVazio.innerHTML = buildTerminalOptions('vazio', atual);
+            }
+        };
+
+        // Carrega/observa em tempo real a lista compartilhada de terminais.
+        const loadTerminais = () => {
+            const ref = doc(db, "config", "terminals");
+            onSnapshot(ref, (snap) => {
+                const data = snap.exists() ? snap.data() : {};
+                terminaisCadastrados.vazio = data.vazio || [];
+                terminaisCadastrados.cheio = data.cheio || [];
+                renderTerminalSelectsInSidebar();
+                if (currentViewingProcessId) {
+                    const proc = processes.find(p => p.id === currentViewingProcessId);
+                    if (proc) renderModalContent(proc);
+                }
+            });
+        };
+
+        // Pede o nome do novo terminal e adiciona na lista compartilhada (sem duplicar).
+        // Retorna o nome adicionado, ou null se o usuário cancelou.
+        window.adicionarNovoTerminal = async (categoria) => {
+            const rotulo = categoria === 'vazio' ? 'Vazio' : 'Cheio';
+            const nome = prompt(`Nome do novo terminal (${rotulo}):`);
+            if (!nome || !nome.trim()) return null;
+            const nomeLimpo = nome.trim().slice(0, 150);
+            const atual = terminaisCadastrados[categoria] || [];
+            if (!atual.includes(nomeLimpo)) {
+                const novaLista = [...atual, nomeLimpo].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                const ref = doc(db, "config", "terminals");
+                await setDoc(ref, { [categoria]: novaLista }, { merge: true });
+            }
+            return nomeLimpo;
+        };
+
+        // onchange dos selects de terminal do formulário lateral (novo processo).
+        window.handleTerminalSelectForm = async (selectEl, categoria) => {
+            if (selectEl.value === '__novo__') {
+                const novoNome = await window.adicionarNovoTerminal(categoria);
+                renderTerminalSelectsInSidebar();
+                const el = document.getElementById(selectEl.id);
+                if (el) el.value = novoNome || '';
+            }
+        };
+
+        // onchange dos selects de terminal dentro do modal (contêineres de exportação).
+        window.handleTerminalSelect = async (selectEl, procId, ctId, field, categoria) => {
+            if (selectEl.value === '__novo__') {
+                const novoNome = await window.adicionarNovoTerminal(categoria);
+                if (novoNome) {
+                    await updateField(procId, ctId, field, novoNome);
+                } else {
+                    const proc = processes.find(p => p.id === procId);
+                    if (proc) renderModalContent(proc);
+                }
+            } else {
+                await updateField(procId, ctId, field, selectEl.value);
+            }
+        };
+
         // AUTENTICAÇÃO
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -274,6 +372,7 @@
                 mainPanel.classList.remove('hidden');
                 document.getElementById('user-display').innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${escapeHtml(user.email)}`;
                 loadProcesses();
+                loadTerminais();
             } else {
                 currentUser = null;
                 loginScreen.classList.remove('hidden');
@@ -732,14 +831,14 @@
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Retirada Vazio</label>
                             <div class="flex flex-col gap-2">
-                                <input type="text" placeholder="Local / Terminal" value="${escapeHtml(ct.termVazioExp)}" onchange="updateField('${proc.id}', '${ct.id}', 'termVazioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termVazioExp', 'vazio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">${buildTerminalOptions('vazio', ct.termVazioExp)}</select>
                                 <input type="datetime-local" value="${escapeHtml(ct.agVazio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                             </div>
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Depósito Cheio</label>
                             <div class="flex flex-col gap-2">
-                                <input type="text" placeholder="Local / Terminal" value="${escapeHtml(ct.termCheioExp)}" onchange="updateField('${proc.id}', '${ct.id}', 'termCheioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termCheioExp', 'cheio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">${buildTerminalOptions('cheio', ct.termCheioExp)}</select>
                                 <input type="datetime-local" value="${escapeHtml(ct.agCheio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                             </div>
                         </div>
