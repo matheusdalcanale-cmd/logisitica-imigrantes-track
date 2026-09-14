@@ -309,6 +309,20 @@
                 .replace(/'/g, '&#39;');
         };
 
+        // Formata a numeração do contêiner em tempo real no padrão
+        // "ABCD 123.456-7" (4 letras + espaço + 3 dígitos + ponto + 3 dígitos +
+        // traço + dígito verificador), aceitando colagem fora de ordem.
+        window.maskContainerNumero = (inputEl) => {
+            const clean = (inputEl.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const letters = (clean.match(/[A-Z]/g) || []).slice(0, 4).join('');
+            const digits = (clean.match(/[0-9]/g) || []).slice(0, 7).join('');
+            let out = letters;
+            if (digits.length > 0) out += ' ' + digits.slice(0, 3);
+            if (digits.length > 3) out += '.' + digits.slice(3, 6);
+            if (digits.length > 6) out += '-' + digits.slice(6, 7);
+            inputEl.value = out;
+        };
+
         // CHECKLIST ORDER IMPORT (Exatamente como solicitado)
         const importChecklistSteps = [
             { id: 'ag_carga', label: 'Agendamento de Carregamento', type: 'datetime' },
@@ -590,7 +604,7 @@
                     <button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="w-6 h-6 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-900/20 text-xs transition flex items-center justify-center"><i class="fas fa-trash"></i></button>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-2">
-                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
+                    <input type="text" placeholder="ABCD 123.456-7" maxlength="15" oninput="maskContainerNumero(this)" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
                     <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
                 </div>`;
                 
@@ -894,7 +908,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Numeração</label>
-                            <input type="text" placeholder="Sem Número" value="${escapeHtml(ct.numero)}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
+                            <input type="text" placeholder="ABCD 123.456-7" maxlength="15" value="${escapeHtml(ct.numero)}" oninput="maskContainerNumero(this)" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tipo / Equipamento</label>
