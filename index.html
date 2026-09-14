@@ -86,7 +86,15 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">DI / DTA / DUIMP</label>
-                        <input type="text" id="f-documento" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <div class="flex gap-2">
+                            <select id="f-documento-tipo" class="w-28 p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                                <option value="">Tipo</option>
+                                <option value="DI">DI</option>
+                                <option value="DTA">DTA</option>
+                                <option value="DUIMP">DUIMP</option>
+                            </select>
+                            <input type="text" id="f-documento-numero" maxlength="150" placeholder="Número do documento" class="flex-1 p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition">
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Carregamento</label>
@@ -380,7 +388,8 @@
 
             if (type === 'import') {
                 processData.importador = document.getElementById('f-importador').value;
-                processData.documento = document.getElementById('f-documento').value;
+                processData.documentoTipo = document.getElementById('f-documento-tipo').value;
+                processData.documentoNumero = document.getElementById('f-documento-numero').value;
                 processData.termCarga = document.getElementById('f-term-carga').value;
                 processData.termVazio = document.getElementById('f-term-vazio').value;
             } else {
@@ -467,7 +476,9 @@
 
             filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(proc => {
                 const title = proc.type === 'import' ? proc.importador : proc.exportador;
-                const docRef = proc.type === 'import' ? proc.documento : proc.booking;
+                const docRef = proc.type === 'import'
+                    ? (proc.documentoTipo ? `${proc.documentoTipo}: ${proc.documentoNumero || ''}` : proc.documento)
+                    : proc.booking;
                 
                 // Conta apenas contêineres que já têm número preenchido (ou mostra vazio)
                 const validContainers = proc.containers.filter(c => c.numero !== '');
@@ -538,7 +549,8 @@
             badge.innerText = proc.type;
             if(proc.type === 'import') {
                 title.innerText = proc.importador || 'Processo de Importação';
-                subtitle.innerText = `DI/DTA/DUIMP: ${proc.documento} | Armador: ${proc.armador} | Carga: ${proc.termCarga} | Vazio: ${proc.termVazio}`;
+                const docLabel = proc.documentoTipo ? `${proc.documentoTipo}: ${proc.documentoNumero || ''}` : (proc.documento || '');
+                subtitle.innerText = `${docLabel ? docLabel + ' | ' : ''}Armador: ${proc.armador} | Carga: ${proc.termCarga} | Vazio: ${proc.termVazio}`;
             } else {
                 title.innerText = proc.exportador || 'Processo de Exportação';
                 subtitle.innerText = `Booking: ${proc.booking} | Ref: ${proc.referencia} | Navio: ${proc.navio} | Armador: ${proc.armador}`;
