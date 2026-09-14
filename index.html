@@ -220,6 +220,11 @@
         </header>
 
         <div class="flex-1 p-4 sm:p-8 overflow-y-auto custom-scrollbar">
+            <div class="relative mb-4">
+                <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input type="text" id="search-processos" placeholder="Buscar por armador, motorista, placa, documento/booking ou nº do contêiner..." oninput="filterProcesses(this.value)" class="w-full pl-9 pr-9 py-2.5 text-sm border border-slate-600 rounded-lg bg-navy-800 text-ink focus:border-blue-500 outline-none transition">
+                <button type="button" id="btn-clear-search" onclick="clearSearch()" title="Limpar busca" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-ink w-5 h-5 items-center justify-center rounded-full hover:bg-navy-700 transition"><i class="fas fa-xmark text-xs"></i></button>
+            </div>
             <div id="processes-container" class="space-y-3.5">
                 <!-- Cartões de processos -->
             </div>
@@ -282,6 +287,7 @@
         let currentActiveTab = 'import';
         let processes = [];
         let currentViewingProcessId = null;
+        let searchQuery = ''; // busca rápida (armador, motorista, placa, doc/booking, nº do contêiner)
 
         // Lista de terminais pré-cadastrados, compartilhada com toda a equipe
         // (documento único em config/terminals). "cheio" = terminais onde se
@@ -292,6 +298,10 @@
         // Lista de armadores pré-cadastrados, compartilhada com toda a equipe
         // (documento único em config/armadores).
         let armadoresCadastrados = [];
+
+        // Lista de tipos de contêiner pré-cadastrados (ex: 20DC, 40HC),
+        // compartilhada com toda a equipe (documento único em config/tipos).
+        let tiposCadastrados = [];
 
         const loginScreen = document.getElementById('login-screen');
         const sidebar = document.getElementById('sidebar');
@@ -326,9 +336,51 @@
                 .replace(/'/g, '&#39;');
         };
 
+        // TABELA DE VALORES DO DÍGITO VERIFICADOR (norma ISO 6346), usada para
+        // conferir se a numeração do contêiner foi digitada corretamente. Cada
+        // letra recebe um valor de 10 a 38, pulando de propósito os múltiplos
+        // de 11 (11, 22, 33).
+        const isoLetterValues = {};
+        (() => {
+            let v = 10;
+            for (const letra of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+                while (v % 11 === 0) v++;
+                isoLetterValues[letra] = v;
+                v++;
+            }
+        })();
+
+        // Calcula o dígito verificador esperado (0-9) a partir dos 4 letras +
+        // 6 primeiros dígitos de uma numeração de contêiner (norma ISO 6346).
+        const calcularDigitoVerificador = (dezCaracteres) => {
+            let soma = 0;
+            for (let i = 0; i < 10; i++) {
+                const c = dezCaracteres[i];
+                const valor = /[0-9]/.test(c) ? parseInt(c, 10) : isoLetterValues[c];
+                soma += valor * Math.pow(2, i);
+            }
+            const resto = soma % 11;
+            return resto === 10 ? 0 : resto;
+        };
+
+        // Confere se a numeração (formatada ou não) tem o dígito verificador
+        // correto. Só avalia quando os 11 caracteres (4 letras + 7 dígitos) já
+        // foram digitados — retorna null enquanto o número estiver incompleto,
+        // pra não incomodar a pessoa ainda digitando.
+        const validarNumeroContainer = (valor) => {
+            const clean = (valor || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const letters = (clean.match(/[A-Z]/g) || []).join('');
+            const digits = (clean.match(/[0-9]/g) || []).join('');
+            if (letters.length !== 4 || digits.length !== 7) return null;
+            const esperado = calcularDigitoVerificador(letters + digits.slice(0, 6));
+            const digitado = parseInt(digits[6], 10);
+            return esperado === digitado;
+        };
+
         // Formata a numeração do contêiner em tempo real no padrão
         // "ABCD 123.456-7" (4 letras + espaço + 3 dígitos + ponto + 3 dígitos +
-        // traço + dígito verificador), aceitando colagem fora de ordem.
+        // traço + dígito verificador), aceitando colagem fora de ordem, e avisa
+        // quando o dígito verificador não confere (possível erro de digitação).
         window.maskContainerNumero = (inputEl) => {
             const clean = (inputEl.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
             const letters = (clean.match(/[A-Z]/g) || []).slice(0, 4).join('');
@@ -338,6 +390,11 @@
             if (digits.length > 3) out += '.' + digits.slice(3, 6);
             if (digits.length > 6) out += '-' + digits.slice(6, 7);
             inputEl.value = out;
+
+            const warnEl = inputEl.parentElement ? inputEl.parentElement.querySelector('.ct-num-warning') : null;
+            if (warnEl) {
+                warnEl.classList.toggle('hidden', validarNumeroContainer(out) !== false);
+            }
         };
 
         // CHECKLIST ORDER IMPORT (Exatamente como solicitado)
@@ -513,6 +570,88 @@
             }
         };
 
+        // TIPOS DE CONTÊINER PRÉ-CADASTRADOS (lista compartilhada com a equipe)
+        const buildTipoOptions = (valorSelecionado) => {
+            const lista = tiposCadastrados || [];
+            let html = `<option value="">Selecione...</option>`;
+            lista.forEach(nome => {
+                const selecionado = nome === valorSelecionado ? 'selected' : '';
+                html += `<option value="${escapeHtml(nome)}" ${selecionado}>${escapeHtml(nome)}</option>`;
+            });
+            // Se o valor salvo não está (mais) na lista cadastrada (ex.: dado antigo
+            // digitado como texto livre antes dessa mudança), mostra mesmo assim.
+            if (valorSelecionado && !lista.includes(valorSelecionado)) {
+                html += `<option value="${escapeHtml(valorSelecionado)}" selected>${escapeHtml(valorSelecionado)} (não cadastrado)</option>`;
+            }
+            html += `<option value="__novo__">+ Adicionar novo tipo...</option>`;
+            return html;
+        };
+
+        // Redesenha todos os selects de Tipo do formulário lateral (pode haver
+        // mais de uma "Unidade" adicionada), preservando o valor já escolhido
+        // em cada um.
+        const renderTipoSelectsInSidebar = () => {
+            document.querySelectorAll('#container-list .ct-tipo').forEach(sel => {
+                const atual = sel.value === '__novo__' ? '' : sel.value;
+                sel.innerHTML = buildTipoOptions(atual);
+            });
+        };
+
+        // Carrega/observa em tempo real a lista compartilhada de tipos de contêiner.
+        const loadTipos = () => {
+            const ref = doc(db, "config", "tipos");
+            onSnapshot(ref, (snap) => {
+                const data = snap.exists() ? snap.data() : {};
+                tiposCadastrados = data.lista || [];
+                renderTipoSelectsInSidebar();
+                if (currentViewingProcessId) {
+                    const proc = processes.find(p => p.id === currentViewingProcessId);
+                    if (proc) renderModalContent(proc);
+                }
+            });
+        };
+
+        // Pede o nome do novo tipo e adiciona na lista compartilhada (sem duplicar).
+        // Retorna o nome adicionado, ou null se o usuário cancelou.
+        window.adicionarNovoTipo = async () => {
+            const nome = prompt('Nome do novo tipo de contêiner (ex: 40HC):');
+            if (!nome || !nome.trim()) return null;
+            const nomeLimpo = nome.trim().slice(0, 150);
+            const atual = tiposCadastrados || [];
+            if (!atual.includes(nomeLimpo)) {
+                const novaLista = [...atual, nomeLimpo].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                const ref = doc(db, "config", "tipos");
+                await setDoc(ref, { lista: novaLista }, { merge: true });
+            }
+            return nomeLimpo;
+        };
+
+        // onchange dos selects de Tipo do formulário lateral (novo processo).
+        // Cada "Unidade" adicionada tem o seu próprio select (sem id fixo), por
+        // isso atualizamos direto pela referência do elemento clicado.
+        window.handleTipoSelectForm = async (selectEl) => {
+            if (selectEl.value === '__novo__') {
+                const novoNome = await window.adicionarNovoTipo();
+                renderTipoSelectsInSidebar();
+                selectEl.value = novoNome || '';
+            }
+        };
+
+        // onchange do select de Tipo dentro do modal (contêiner já salvo no processo).
+        window.handleTipoSelect = async (selectEl, procId, ctId) => {
+            if (selectEl.value === '__novo__') {
+                const novoNome = await window.adicionarNovoTipo();
+                if (novoNome) {
+                    await updateField(procId, ctId, 'tipo', novoNome);
+                } else {
+                    const proc = processes.find(p => p.id === procId);
+                    if (proc) renderModalContent(proc);
+                }
+            } else {
+                await updateField(procId, ctId, 'tipo', selectEl.value);
+            }
+        };
+
         // AUTENTICAÇÃO
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -524,6 +663,7 @@
                 loadProcesses();
                 loadTerminais();
                 loadArmadores();
+                loadTipos();
             } else {
                 currentUser = null;
                 loginScreen.classList.remove('hidden');
@@ -620,6 +760,27 @@
         document.getElementById('tab-export').addEventListener('click', () => setMainTab('export'));
         document.getElementById('tab-archive').addEventListener('click', () => setMainTab('archive'));
 
+        // BUSCA RÁPIDA de processos (armador, motorista, placa, doc/booking, nº do contêiner)
+        window.filterProcesses = (valor) => {
+            searchQuery = (valor || '').toLowerCase().trim();
+            const btnClear = document.getElementById('btn-clear-search');
+            if (searchQuery) {
+                btnClear.classList.remove('hidden');
+                btnClear.classList.add('flex');
+            } else {
+                btnClear.classList.add('hidden');
+                btnClear.classList.remove('flex');
+            }
+            renderProcesses();
+        };
+
+        window.clearSearch = () => {
+            const input = document.getElementById('search-processos');
+            input.value = '';
+            window.filterProcesses('');
+            input.focus();
+        };
+
         // GESTÃO DE CONTAINERS NO FORMULÁRIO LATERAL (OPCIONALIDADE)
         let containerCount = 0;
         const addContainerField = (type = document.getElementById('process-type').value) => {
@@ -634,8 +795,11 @@
                     <button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="w-6 h-6 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-900/20 text-xs transition flex items-center justify-center"><i class="fas fa-trash"></i></button>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-2">
-                    <input type="text" placeholder="ABCD 123.456-7" maxlength="15" oninput="maskContainerNumero(this)" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
-                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
+                    <div>
+                        <input type="text" placeholder="ABCD 123.456-7" maxlength="15" oninput="maskContainerNumero(this)" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">
+                        <p class="ct-num-warning hidden text-[10px] text-red-400 mt-1 leading-tight">Dígito verificador não confere.</p>
+                    </div>
+                    <select onchange="handleTipoSelectForm(this)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-ink rounded-md outline-none focus:border-blue-500 transition">${buildTipoOptions('')}</select>
                 </div>`;
                 
             div.innerHTML = html;
@@ -826,11 +990,29 @@
                 return false;
             });
 
+            // Busca rápida: procura o termo digitado em armador, motorista,
+            // placas, importador/exportador, documento/booking/referência/navio
+            // e nos números de contêiner do processo.
+            if (searchQuery) {
+                filtered = filtered.filter(proc => {
+                    const campos = [
+                        proc.armador, proc.motorista, proc.placas,
+                        proc.importador, proc.exportador,
+                        proc.documentoNumero, proc.documento, proc.booking, proc.referencia, proc.navio,
+                        ...(proc.containers || []).map(c => c.numero)
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    return campos.includes(searchQuery);
+                });
+            }
+
             if(filtered.length === 0) {
+                const mensagem = searchQuery
+                    ? `Nenhum processo encontrado para "${escapeHtml(document.getElementById('search-processos').value)}".`
+                    : 'Nenhum processo encontrado nesta visão.';
                 container.innerHTML = `
                     <div class="text-center py-16 px-6 text-slate-500 bg-navy-800/60 rounded-2xl border border-dashed border-slate-700">
                         <i class="fas fa-inbox text-2xl text-slate-500 mb-3"></i>
-                        <p class="text-sm">Nenhum processo encontrado nesta visão.</p>
+                        <p class="text-sm">${mensagem}</p>
                     </div>`;
                 return;
             }
@@ -1000,10 +1182,11 @@
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Numeração</label>
                             <input type="text" placeholder="ABCD 123.456-7" maxlength="15" value="${escapeHtml(ct.numero)}" oninput="maskContainerNumero(this)" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
+                            <p class="ct-num-warning ${validarNumeroContainer(ct.numero) === false ? '' : 'hidden'} text-[10px] text-red-400 mt-1 leading-tight">Dígito verificador não confere.</p>
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tipo / Equipamento</label>
-                            <input type="text" placeholder="Ex: 40HC" value="${escapeHtml(ct.tipo)}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
+                            <select onchange="handleTipoSelect(this, '${proc.id}', '${ct.id}')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">${buildTipoOptions(ct.tipo)}</select>
                         </div>
                     </div>`;
 
