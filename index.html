@@ -35,7 +35,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-400 mb-1">Senha</label>
-                    <input type="password" id="auth-password" required class="w-full rounded-lg bg-navy-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2.5 outline-none transition">
+                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-navy-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2.5 outline-none transition">
                 </div>
                 <div class="text-red-400 text-sm hidden bg-red-900/20 p-2 rounded border border-red-800" id="auth-error"></div>
                 <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">Entrar / Cadastrar</button>
@@ -65,26 +65,26 @@
                 <!-- Campos Comuns -->
                 <div id="fields-common">
                     <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Armador</label>
-                    <input type="text" id="f-armador" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition" required>
+                    <input type="text" id="f-armador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:bg-slate-700 focus:border-blue-400 outline-none transition" required>
                 </div>
 
                 <!-- Campos Importação -->
                 <div id="fields-import" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Importador</label>
-                        <input type="text" id="f-importador" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-importador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">DI / DTA / DUIMP</label>
-                        <input type="text" id="f-documento" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-documento" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Carregamento</label>
-                        <input type="text" id="f-term-carga" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-term-carga" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Vazio</label>
-                        <input type="text" id="f-term-vazio" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-term-vazio" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                 </div>
 
@@ -92,19 +92,19 @@
                 <div id="fields-export" class="space-y-4 hidden">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Exportador</label>
-                        <input type="text" id="f-exportador" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-exportador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Referência do Processo</label>
-                        <input type="text" id="f-referencia" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-referencia" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Número do Booking</label>
-                        <input type="text" id="f-booking" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-booking" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Nome do Navio</label>
-                        <input type="text" id="f-navio" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
+                        <input type="text" id="f-navio" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-white focus:border-blue-400 outline-none transition">
                     </div>
                 </div>
 
@@ -206,7 +206,20 @@
         const loginScreen = document.getElementById('login-screen');
         const sidebar = document.getElementById('sidebar');
         const mainPanel = document.getElementById('main-panel');
-        
+
+        // SEGURANÇA: escapa qualquer valor antes de inseri-lo via innerHTML,
+        // impedindo que texto digitado pelo usuário (armador, número de contêiner,
+        // e-mail, etc.) seja interpretado como HTML/JS (XSS armazenado).
+        const escapeHtml = (value) => {
+            if (value === null || value === undefined) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
         // CHECKLIST ORDER IMPORT (Exatamente como solicitado)
         const importChecklistSteps = [
             { id: 'ag_carga', label: 'Agendamento de Carregamento', type: 'datetime' },
@@ -224,7 +237,7 @@
                 loginScreen.classList.add('hidden');
                 sidebar.classList.remove('hidden');
                 mainPanel.classList.remove('hidden');
-                document.getElementById('user-display').innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${user.email}`;
+                document.getElementById('user-display').innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${escapeHtml(user.email)}`;
                 loadProcesses();
             } else {
                 currentUser = null;
@@ -444,7 +457,7 @@
                 const validContainers = proc.containers.filter(c => c.numero !== '');
                 const countBadgeText = validContainers.length > 0 ? `${validContainers.length} Unid.` : 'Pendente';
                 
-                const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded shadow-sm">${c.numero}</span>`).join(' ');
+                const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded shadow-sm">${escapeHtml(c.numero)}</span>`).join(' ');
                 const extraBadges = validContainers.length > 3 ? `<span class="text-xs text-slate-500">+...+</span>` : '';
 
                 const embraportAlert = (proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) || 
@@ -459,12 +472,12 @@
                     <div class="flex items-center gap-6 w-full">
                         <div class="w-1/3">
                             <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">${proc.type === 'import' ? 'Importação' : 'Exportação'} ${embraportAlert}</div>
-                            <div class="font-bold text-white text-lg truncate group-hover:text-blue-400 transition">${title || 'Sem Nome'}</div>
-                            <div class="text-xs text-slate-400 mt-1"><i class="fas fa-ship mr-1 opacity-50"></i> ${proc.armador || 'N/A'}</div>
+                            <div class="font-bold text-white text-lg truncate group-hover:text-blue-400 transition">${escapeHtml(title) || 'Sem Nome'}</div>
+                            <div class="text-xs text-slate-400 mt-1"><i class="fas fa-ship mr-1 opacity-50"></i> ${escapeHtml(proc.armador) || 'N/A'}</div>
                         </div>
                         <div class="w-1/3 border-l border-slate-700 pl-6">
                             <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Doc / Booking</div>
-                            <div class="font-bold text-slate-200 text-base">${docRef || 'Aguardando'}</div>
+                            <div class="font-bold text-slate-200 text-base">${escapeHtml(docRef) || 'Aguardando'}</div>
                         </div>
                         <div class="w-1/3 flex flex-col items-end">
                             <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2">${countBadgeText}</div>
@@ -550,11 +563,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Numeração</label>
-                            <input type="text" placeholder="Sem Número" value="${ct.numero || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Sem Número" value="${escapeHtml(ct.numero)}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tipo / Equipamento</label>
-                            <input type="text" placeholder="Ex: 40HC" value="${ct.tipo || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Ex: 40HC" value="${escapeHtml(ct.tipo)}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
                         </div>
                     </div>`;
                 
@@ -563,11 +576,11 @@
                     <div class="grid grid-cols-2 gap-4 mt-3">
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tara</label>
-                            <input type="text" placeholder="Tara" value="${ct.tara || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'tara', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Tara" value="${escapeHtml(ct.tara)}" onchange="updateField('${proc.id}', '${ct.id}', 'tara', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Lacre</label>
-                            <input type="text" placeholder="Lacre" value="${ct.lacre || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'lacre', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Lacre" value="${escapeHtml(ct.lacre)}" onchange="updateField('${proc.id}', '${ct.id}', 'lacre', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
                         </div>
                     </div>`;
                 }
@@ -590,7 +603,7 @@
                             ctBody += `
                             <div class="flex items-center justify-between text-sm text-slate-300 bg-navy-800 p-3 rounded-lg border border-slate-700">
                                 <span class="font-medium">${step.label}</span>
-                                <input type="datetime-local" value="${val}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded p-1.5 text-xs text-white focus:border-blue-500 outline-none w-48">
+                                <input type="datetime-local" value="${escapeHtml(val)}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded p-1.5 text-xs text-white focus:border-blue-500 outline-none w-48">
                             </div>`;
                         }
                     });
@@ -601,24 +614,24 @@
                     <div class="grid grid-cols-2 gap-5 text-sm">
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Draft</label>
-                            <input type="datetime-local" value="${ct.deadlineDraft || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                            <input type="datetime-local" value="${escapeHtml(ct.deadlineDraft)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Carga</label>
-                            <input type="datetime-local" value="${ct.deadlineCarga || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                            <input type="datetime-local" value="${escapeHtml(ct.deadlineCarga)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Retirada Vazio</label>
                             <div class="flex flex-col gap-2">
-                                <input type="text" placeholder="Local / Terminal" value="${ct.termVazioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termVazioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
-                                <input type="datetime-local" value="${ct.agVazio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <input type="text" placeholder="Local / Terminal" value="${escapeHtml(ct.termVazioExp)}" onchange="updateField('${proc.id}', '${ct.id}', 'termVazioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <input type="datetime-local" value="${escapeHtml(ct.agVazio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                             </div>
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Depósito Cheio</label>
                             <div class="flex flex-col gap-2">
-                                <input type="text" placeholder="Local / Terminal" value="${ct.termCheioExp || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'termCheioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
-                                <input type="datetime-local" value="${ct.agCheio || ''}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <input type="text" placeholder="Local / Terminal" value="${escapeHtml(ct.termCheioExp)}" onchange="updateField('${proc.id}', '${ct.id}', 'termCheioExp', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <input type="datetime-local" value="${escapeHtml(ct.agCheio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
                             </div>
                         </div>
                     </div>`;
