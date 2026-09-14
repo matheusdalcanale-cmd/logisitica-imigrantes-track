@@ -116,26 +116,18 @@
             <form id="process-form" class="space-y-4">
                 <input type="hidden" id="process-type" value="import">
                 
-                <!-- Campos Comuns -->
-                <div id="fields-common" class="space-y-4">
+                <!-- Armador (comum a importação e exportação) -->
+                <div id="fields-common-armador" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Armador</label>
                         <select id="f-armador" onchange="handleArmadorSelectForm(this)" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition" required>
                             <option value="">Selecione...</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Motorista</label>
-                        <input type="text" id="f-motorista" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Placas do Caminhão</label>
-                        <input type="text" id="f-placas" maxlength="150" placeholder="Ex: ABC1D23 e XYZ9F87" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
-                    </div>
                 </div>
 
-                <!-- Campos Importação -->
-                <div id="fields-import" class="space-y-4">
+                <!-- Campos Importação: Importador / Documento -->
+                <div id="fields-import-doc" class="space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Importador</label>
                         <input type="text" id="f-importador" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
@@ -151,18 +143,6 @@
                             </select>
                             <input type="text" id="f-documento-numero" maxlength="150" placeholder="Número do documento" class="flex-1 p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Carregamento</label>
-                        <select id="f-term-carga" onchange="handleTerminalSelectForm(this, 'cheio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
-                            <option value="">Selecione...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Vazio</label>
-                        <select id="f-term-vazio" onchange="handleTerminalSelectForm(this, 'vazio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
-                            <option value="">Selecione...</option>
-                        </select>
                     </div>
                 </div>
 
@@ -183,6 +163,34 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Nome do Navio</label>
                         <input type="text" id="f-navio" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Motorista / Placas (comum a importação e exportação) -->
+                <div id="fields-common-driver" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Motorista</label>
+                        <input type="text" id="f-motorista" maxlength="150" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Placas do Caminhão</label>
+                        <input type="text" id="f-placas" maxlength="150" placeholder="Ex: ABC1D23 e XYZ9F87" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:bg-slate-700 focus:border-blue-400 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Campos Importação: Terminais -->
+                <div id="fields-import-terminals" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Carregamento</label>
+                        <select id="f-term-carga" onchange="handleTerminalSelectForm(this, 'cheio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Terminal de Vazio</label>
+                        <select id="f-term-vazio" onchange="handleTerminalSelectForm(this, 'vazio')" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
                 </div>
 
@@ -716,22 +724,25 @@
             document.getElementById('process-type').value = type;
             const btnImport = document.getElementById('btn-type-import');
             const btnExport = document.getElementById('btn-type-export');
-            const fImport = document.getElementById('fields-import');
+            const fImportDoc = document.getElementById('fields-import-doc');
+            const fImportTerminals = document.getElementById('fields-import-terminals');
             const fExport = document.getElementById('fields-export');
-            
+
             document.getElementById('container-list').innerHTML = '';
             addContainerField(type); // Adiciona 1 opcional por padrão
 
             if (type === 'import') {
                 btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200';
                 btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-ink transition-all duration-200 bg-transparent';
-                fImport.classList.remove('hidden');
+                fImportDoc.classList.remove('hidden');
+                fImportTerminals.classList.remove('hidden');
                 fExport.classList.add('hidden');
             } else {
                 btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200';
                 btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-ink transition-all duration-200 bg-transparent';
                 fExport.classList.remove('hidden');
-                fImport.classList.add('hidden');
+                fImportDoc.classList.add('hidden');
+                fImportTerminals.classList.add('hidden');
             }
         };
 
