@@ -182,9 +182,13 @@
                 <!-- Conteúdo gerado dinamicamente -->
             </div>
 
-            <div class="p-5 border-t border-slate-700 bg-navy-900 flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-5 py-2.5 text-slate-300 font-semibold hover:bg-navy-700 rounded-lg transition border border-transparent hover:border-slate-600">Fechar</button>
-                <button id="btn-archive-process" class="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-lg shadow-emerald-900/30 hover:bg-emerald-500 transition hidden"><i class="fas fa-check-double mr-2"></i> Arquivar Processo</button>
+            <div class="p-5 border-t border-slate-700 bg-navy-900 flex justify-between items-center">
+                <button id="btn-delete-process" class="px-5 py-2.5 text-red-400 font-semibold hover:bg-red-900/20 rounded-lg transition border border-red-900/50 hover:border-red-700"><i class="fas fa-trash mr-2"></i> Excluir Processo</button>
+                <div class="flex gap-3">
+                    <button onclick="closeModal()" class="px-5 py-2.5 text-slate-300 font-semibold hover:bg-navy-700 rounded-lg transition border border-transparent hover:border-slate-600">Fechar</button>
+                    <button id="btn-unarchive-process" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-blue-900/30 hover:bg-blue-500 transition hidden"><i class="fas fa-box-open mr-2"></i> Desarquivar Processo</button>
+                    <button id="btn-archive-process" class="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-lg shadow-emerald-900/30 hover:bg-emerald-500 transition hidden"><i class="fas fa-check-double mr-2"></i> Arquivar Processo</button>
+                </div>
             </div>
         </div>
     </div>
@@ -193,7 +197,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAKGjOftcyDZ-5yPA-5NK55GohtGlrfbeQ",
@@ -527,6 +531,8 @@
             const subtitle = document.getElementById('m-subtitle');
             const alertBox = document.getElementById('m-embraport-alert');
             const btnArchive = document.getElementById('btn-archive-process');
+            const btnUnarchive = document.getElementById('btn-unarchive-process');
+            const btnDelete = document.getElementById('btn-delete-process');
             const ctArea = document.getElementById('m-containers-area');
 
             badge.innerText = proc.type;
@@ -673,9 +679,15 @@
             if(proc.status === 'active') {
                 btnArchive.classList.remove('hidden');
                 btnArchive.onclick = () => archiveProcess(proc.id);
+                btnUnarchive.classList.add('hidden');
             } else {
                 btnArchive.classList.add('hidden');
+                btnUnarchive.classList.remove('hidden');
+                btnUnarchive.onclick = () => unarchiveProcess(proc.id);
             }
+
+            // Excluir processo está sempre disponível, ativo ou arquivado
+            btnDelete.onclick = () => deleteProcess(proc.id);
         };
 
         // FUNÇÕES DE ATUALIZAÇÃO NO FIREBASE (AUTO-SAVE)
@@ -747,6 +759,27 @@
                 const ref = doc(db, "processes", procId);
                 await updateDoc(ref, { status: 'archived' });
                 closeModal();
+            }
+        };
+
+        window.unarchiveProcess = async (procId) => {
+            if(confirm("Deseja mover este processo de volta para a lista de Ativos?")) {
+                const ref = doc(db, "processes", procId);
+                await updateDoc(ref, { status: 'active' });
+                closeModal();
+            }
+        };
+
+        window.deleteProcess = async (procId) => {
+            if(confirm("Tem certeza que deseja EXCLUIR este processo? Essa ação não pode ser desfeita.")) {
+                try {
+                    const ref = doc(db, "processes", procId);
+                    await deleteDoc(ref);
+                    closeModal();
+                } catch (error) {
+                    console.error("Erro ao excluir:", error);
+                    alert("Erro ao excluir processo. Verifique as regras de segurança do Firestore (permissão de delete).");
+                }
             }
         };
     </script>
