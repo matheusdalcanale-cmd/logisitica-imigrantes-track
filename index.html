@@ -6,6 +6,9 @@
     <title>LogiTrack Pro - Gestão Logística</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -16,47 +19,69 @@
                             800: '#1e293b', // slate-800 cards
                             700: '#334155', // slate-700 inputs
                         }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-navy-900 text-slate-300 font-sans h-screen flex overflow-hidden">
+<body class="bg-navy-900 text-slate-300 font-sans antialiased h-screen flex overflow-hidden">
 
     <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="fixed inset-0 bg-navy-900/95 flex items-center justify-center z-50 backdrop-blur-sm">
-        <div class="bg-navy-800 p-8 rounded-xl shadow-2xl w-96 border border-slate-700">
-            <h2 class="text-2xl font-bold mb-6 text-center text-blue-400"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h2>
-            <form id="login-form" class="space-y-5">
+    <div id="login-screen" class="fixed inset-0 bg-navy-900 flex items-center justify-center z-50 overflow-hidden">
+        <div class="pointer-events-none absolute -top-32 -left-24 w-96 h-96 rounded-full bg-blue-600/10 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-32 -right-24 w-96 h-96 rounded-full bg-blue-600/10 blur-3xl"></div>
+        <div class="relative bg-navy-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-700/80">
+            <div class="flex flex-col items-center text-center mb-7">
+                <div class="w-12 h-12 rounded-xl bg-blue-600/15 border border-blue-800/60 flex items-center justify-center mb-4">
+                    <i class="fas fa-truck-fast text-blue-400 text-lg"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white tracking-tight">LogiTrack</h2>
+                <p class="text-[11px] text-slate-500 uppercase tracking-widest mt-1">Gestão Logística</p>
+            </div>
+            <form id="login-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">E-mail</label>
-                    <input type="email" id="auth-email" required class="w-full rounded-lg bg-navy-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2.5 outline-none transition">
+                    <label class="block text-sm font-medium text-slate-400 mb-1.5">E-mail</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="email" id="auth-email" required class="w-full rounded-lg bg-navy-700 border border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-9 pr-3 py-2.5 outline-none transition">
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-1">Senha</label>
-                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-navy-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2.5 outline-none transition">
+                    <label class="block text-sm font-medium text-slate-400 mb-1.5">Senha</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-navy-700 border border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-9 pr-3 py-2.5 outline-none transition">
+                    </div>
                 </div>
-                <div class="text-red-400 text-sm hidden bg-red-900/20 p-2 rounded border border-red-800" id="auth-error"></div>
-                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-500 transition shadow-lg shadow-blue-900/50">Entrar</button>
-                <p class="text-xs text-slate-500 text-center mt-4">Acesso restrito. Apenas contas criadas pelo administrador podem entrar.</p>
+                <div class="text-red-400 text-sm hidden bg-red-900/20 p-2.5 rounded-lg border border-red-800" id="auth-error"></div>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-500 active:scale-[0.99] transition shadow-lg shadow-blue-900/50">Entrar</button>
+                <p class="text-xs text-slate-500 text-center pt-2 flex items-center justify-center gap-1.5"><i class="fas fa-shield-halved text-slate-600"></i>Acesso restrito a contas criadas pelo administrador.</p>
             </form>
         </div>
     </div>
 
     <!-- SIDEBAR / FORMULÁRIO DE CRIAÇÃO -->
     <aside class="w-[340px] bg-navy-800 shadow-2xl flex flex-col h-full border-r border-slate-700 hidden" id="sidebar">
-        <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-navy-900">
-            <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-truck-fast mr-2"></i>LogiTrack</h1>
-            <button id="btn-logout" class="text-slate-400 hover:text-white text-sm transition"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        <div class="p-5 border-b border-slate-700 flex justify-between items-center bg-navy-900">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-600/15 border border-blue-800/60 flex items-center justify-center">
+                    <i class="fas fa-truck-fast text-blue-400 text-sm"></i>
+                </div>
+                <h1 class="text-base font-bold text-white tracking-tight">LogiTrack</h1>
+            </div>
+            <button id="btn-logout" title="Sair" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-navy-700 transition flex items-center justify-center"><i class="fas fa-sign-out-alt text-sm"></i></button>
         </div>
-        
+
         <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
-            <h2 class="text-lg font-bold mb-4 text-white">Novo Processo</h2>
-            
-            <div class="flex gap-2 mb-6 bg-navy-700 p-1 rounded-lg">
-                <button id="btn-type-import" class="flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition">Importação</button>
-                <button id="btn-type-export" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition">Exportação</button>
+            <h2 class="text-[11px] font-bold mb-4 text-slate-500 uppercase tracking-widest">Novo Processo</h2>
+
+            <div class="flex gap-1 mb-6 bg-navy-900 p-1 rounded-lg border border-slate-700">
+                <button id="btn-type-import" class="flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200">Importação</button>
+                <button id="btn-type-export" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition-all duration-200">Exportação</button>
             </div>
 
             <form id="process-form" class="space-y-4">
@@ -133,32 +158,32 @@
                 <div class="border-t border-slate-700 pt-5 mt-5">
                     <h3 class="text-sm font-bold text-white mb-3 flex justify-between items-center">
                         Contêineres Iniciais
-                        <button type="button" id="btn-add-container" class="text-blue-400 hover:text-blue-300 text-xs transition"><i class="fas fa-plus"></i> Adicionar</button>
+                        <button type="button" id="btn-add-container" class="text-blue-400 hover:text-blue-300 text-xs font-semibold transition flex items-center gap-1"><i class="fas fa-plus text-[10px]"></i> Adicionar</button>
                     </h3>
-                    <p class="text-xs text-slate-500 mb-3 leading-tight">Opcional: Você pode adicionar ou editar contêineres e lacres depois, abrindo o processo.</p>
+                    <p class="text-xs text-slate-500 mb-3 leading-relaxed">Opcional: você pode adicionar ou editar contêineres e lacres depois, abrindo o processo.</p>
                     <div id="container-list" class="space-y-3">
                         <!-- Containers inseridos dinamicamente -->
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg mt-8 hover:bg-blue-500 shadow-lg shadow-blue-900/50 transition">Criar Processo</button>
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg mt-8 hover:bg-blue-500 active:scale-[0.99] shadow-lg shadow-blue-900/50 transition">Criar Processo</button>
             </form>
         </div>
     </aside>
 
     <!-- PAINEL PRINCIPAL -->
     <main class="flex-1 flex flex-col h-full hidden" id="main-panel">
-        <header class="bg-navy-800 shadow-md border-b border-slate-700 px-8 py-5 flex items-center justify-between">
-            <div class="flex gap-6">
-                <button id="tab-import" class="font-bold text-blue-400 border-b-2 border-blue-400 pb-1 transition">Importações Ativas</button>
-                <button id="tab-export" class="font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-1 transition">Exportações Ativas</button>
-                <button id="tab-archive" class="font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-1 transition">Arquivados</button>
+        <header class="bg-navy-800 shadow-md border-b border-slate-700 px-8 py-4 flex items-center justify-between">
+            <div class="flex gap-8">
+                <button id="tab-import" class="text-sm font-bold text-blue-400 border-b-2 border-blue-400 pb-2 transition-colors">Importações Ativas</button>
+                <button id="tab-export" class="text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors">Exportações Ativas</button>
+                <button id="tab-archive" class="text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors">Arquivados</button>
             </div>
-            <div class="text-sm text-slate-400 bg-navy-900 px-3 py-1.5 rounded-full border border-slate-700" id="user-display"></div>
+            <div class="flex items-center gap-2 text-sm text-slate-300 bg-navy-900 pl-2 pr-3.5 py-1.5 rounded-full border border-slate-700" id="user-display"></div>
         </header>
 
-        <div class="flex-1 p-8 overflow-y-auto">
-            <div id="processes-container" class="space-y-4">
+        <div class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+            <div id="processes-container" class="space-y-3.5">
                 <!-- Cartões de processos -->
             </div>
         </div>
@@ -166,21 +191,21 @@
 
     <!-- MODAL DE DETALHES -->
     <div id="process-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-navy-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-slate-700 overflow-hidden">
-            
+        <div id="process-modal-panel" class="bg-navy-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-slate-700 overflow-hidden">
+
             <div class="bg-navy-900 p-5 border-b border-slate-700 flex justify-between items-start">
                 <div>
                     <div class="flex gap-3 items-center mb-1">
-                        <span id="m-type-badge" class="px-2.5 py-1 text-xs font-bold rounded bg-blue-900/50 text-blue-400 border border-blue-800 uppercase tracking-wider"></span>
-                        <h2 id="m-title" class="text-2xl font-bold text-white"></h2>
+                        <span id="m-type-badge" class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-900/50 text-blue-400 border border-blue-800 uppercase tracking-wider"></span>
+                        <h2 id="m-title" class="text-2xl font-bold text-white tracking-tight"></h2>
                     </div>
                     <p id="m-subtitle" class="text-sm text-slate-400 mt-1"></p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-500 hover:text-white text-2xl transition">&times;</button>
+                <button onclick="closeModal()" title="Fechar" class="w-9 h-9 rounded-full text-slate-500 hover:text-white hover:bg-navy-700 text-xl transition flex items-center justify-center shrink-0">&times;</button>
             </div>
-            
+
             <!-- Alerta Embraport -->
-            <div id="m-embraport-alert" class="hidden bg-yellow-900/30 border-l-4 border-yellow-500 p-4">
+            <div id="m-embraport-alert" class="hidden bg-yellow-900/30 border-l-4 border-yellow-500 rounded-r-lg mx-5 mt-5 p-4">
                 <div class="flex">
                     <div class="flex-shrink-0"><i class="fas fa-exclamation-triangle text-yellow-500 mt-0.5"></i></div>
                     <div class="ml-3">
@@ -190,7 +215,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-6 bg-navy-800" id="m-containers-area">
+            <div class="flex-1 overflow-y-auto p-6 bg-navy-800 custom-scrollbar" id="m-containers-area">
                 <!-- Conteúdo gerado dinamicamente -->
             </div>
 
@@ -370,7 +395,7 @@
                 loginScreen.classList.add('hidden');
                 sidebar.classList.remove('hidden');
                 mainPanel.classList.remove('hidden');
-                document.getElementById('user-display').innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${escapeHtml(user.email)}`;
+                document.getElementById('user-display').innerHTML = `<span class="w-5 h-5 rounded-full bg-blue-600/20 text-blue-400 text-[10px] font-bold flex items-center justify-center">${escapeHtml((user.email || '?').charAt(0).toUpperCase())}</span><span>${escapeHtml(user.email)}</span>`;
                 loadProcesses();
                 loadTerminais();
             } else {
@@ -419,13 +444,13 @@
             addContainerField(type); // Adiciona 1 opcional por padrão
 
             if (type === 'import') {
-                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition';
-                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition bg-transparent';
+                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200';
+                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition-all duration-200 bg-transparent';
                 fImport.classList.remove('hidden');
                 fExport.classList.add('hidden');
             } else {
-                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition';
-                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition bg-transparent';
+                btnExport.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-blue-600 text-white shadow transition-all duration-200';
+                btnImport.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-400 hover:text-white transition-all duration-200 bg-transparent';
                 fExport.classList.remove('hidden');
                 fImport.classList.add('hidden');
             }
@@ -442,12 +467,12 @@
                 'archive': document.getElementById('tab-archive')
             };
             
-            Object.values(tabs).forEach(t => t.className = 'font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-1 transition');
-            
+            Object.values(tabs).forEach(t => t.className = 'text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors');
+
             if(tab === 'archive') {
-                tabs[tab].className = 'font-bold text-emerald-500 border-b-2 border-emerald-500 pb-1 transition';
+                tabs[tab].className = 'text-sm font-bold text-emerald-500 border-b-2 border-emerald-500 pb-2 transition-colors';
             } else {
-                tabs[tab].className = 'font-bold text-blue-400 border-b-2 border-blue-400 pb-1 transition';
+                tabs[tab].className = 'text-sm font-bold text-blue-400 border-b-2 border-blue-400 pb-2 transition-colors';
             }
             renderProcesses();
         };
@@ -463,15 +488,15 @@
             const div = document.createElement('div');
             div.className = 'bg-navy-900 p-3 rounded-lg border border-slate-700 relative';
             div.id = `ct-form-${containerCount}`;
-            
+
             let html = `
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Unidade ${containerCount}</span>
-                    <button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="text-slate-500 hover:text-red-400 text-xs transition"><i class="fas fa-trash"></i></button>
+                    <button type="button" onclick="document.getElementById('ct-form-${containerCount}').remove()" class="w-6 h-6 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-900/20 text-xs transition flex items-center justify-center"><i class="fas fa-trash"></i></button>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-2">
-                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded outline-none focus:border-blue-500">
-                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded outline-none focus:border-blue-500">
+                    <input type="text" placeholder="Numeração" class="ct-num w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded-md outline-none focus:border-blue-500 transition">
+                    <input type="text" placeholder="Tipo (ex: 40HC)" class="ct-tipo w-full p-2 text-xs border border-slate-600 bg-navy-700 text-white rounded-md outline-none focus:border-blue-500 transition">
                 </div>`;
                 
             div.innerHTML = html;
@@ -613,7 +638,11 @@
             });
 
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="text-center p-12 text-slate-500 bg-navy-800 rounded-xl border border-slate-700 border-dashed">Nenhum processo encontrado nesta visão.</div>`;
+                container.innerHTML = `
+                    <div class="text-center py-16 px-6 text-slate-500 bg-navy-800/60 rounded-2xl border border-dashed border-slate-700">
+                        <i class="fas fa-inbox text-2xl text-slate-600 mb-3"></i>
+                        <p class="text-sm">Nenhum processo encontrado nesta visão.</p>
+                    </div>`;
                 return;
             }
 
@@ -627,27 +656,28 @@
                 const validContainers = proc.containers.filter(c => c.numero !== '');
                 const countBadgeText = validContainers.length > 0 ? `${validContainers.length} Unid.` : 'Pendente';
                 
-                const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded shadow-sm">${escapeHtml(c.numero)}</span>`).join(' ');
-                const extraBadges = validContainers.length > 3 ? `<span class="text-xs text-slate-500">+...+</span>` : '';
+                const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded-md shadow-sm">${escapeHtml(c.numero)}</span>`).join(' ');
+                const extraBadges = validContainers.length > 3 ? `<span class="text-xs text-slate-500 px-1">+${validContainers.length - 3}</span>` : '';
 
-                const embraportAlert = (proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) || 
+                const embraportAlert = (proc.termCarga && proc.termCarga.toLowerCase().includes('embraport')) ||
                                        (proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport')))
                                        ? `<i class="fas fa-exclamation-triangle text-yellow-500 ml-2" title="Alerta Embraport"></i>` : '';
 
                 const progress = getProcessProgress(proc);
-                const progressColor = progress === 100 ? 'bg-emerald-500' : 'bg-blue-500';
+                const progressDone = progress === 100;
+                const progressColor = progressDone ? 'bg-emerald-500' : 'bg-blue-500';
 
                 const card = document.createElement('div');
-                card.className = "bg-navy-800 p-5 rounded-xl shadow-lg border border-slate-700 cursor-pointer hover:border-blue-500 hover:shadow-blue-900/20 transition group";
+                card.className = "bg-navy-800 p-5 rounded-2xl shadow-lg border border-slate-700 cursor-pointer hover:border-blue-500/70 hover:shadow-xl hover:shadow-blue-900/20 hover:-translate-y-0.5 transition-all group";
                 card.onclick = () => openModal(proc.id);
 
                 card.innerHTML = `
                     <div class="flex items-center gap-6 w-full">
                         <div class="w-1/3">
                             <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">${proc.type === 'import' ? 'Importação' : 'Exportação'} ${embraportAlert}</div>
-                            <div class="font-bold text-white text-lg truncate group-hover:text-blue-400 transition">${escapeHtml(title) || 'Sem Nome'}</div>
-                            <div class="text-xs text-slate-400 mt-1"><i class="fas fa-ship mr-1 opacity-50"></i> ${escapeHtml(proc.armador) || 'N/A'}</div>
-                            <div class="text-xs text-slate-500 mt-1"><i class="fas fa-id-badge mr-1 opacity-50"></i>${escapeHtml(proc.motorista) || 'Motorista N/D'} <span class="mx-1">•</span><i class="fas fa-truck mr-1 opacity-50"></i>${escapeHtml(proc.placas) || 'Placas N/D'}</div>
+                            <div class="font-bold text-white text-lg truncate group-hover:text-blue-400 transition-colors">${escapeHtml(title) || 'Sem Nome'}</div>
+                            <div class="text-xs text-slate-400 mt-1.5"><i class="fas fa-ship mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.armador) || 'N/A'}</div>
+                            <div class="text-xs text-slate-500 mt-1"><i class="fas fa-id-badge mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.motorista) || 'Motorista N/D'} <span class="mx-1 opacity-40">•</span><i class="fas fa-truck mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.placas) || 'Placas N/D'}</div>
                         </div>
                         <div class="w-1/3 border-l border-slate-700 pl-6">
                             <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Doc / Booking</div>
@@ -661,9 +691,9 @@
                     <div class="mt-4 pt-3 border-t border-slate-700/60">
                         <div class="flex items-center justify-between mb-1.5">
                             <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Progresso</span>
-                            <span class="text-[10px] text-slate-400 font-bold">${progress}%</span>
+                            <span class="text-[10px] font-bold flex items-center gap-1 ${progressDone ? 'text-emerald-400' : 'text-slate-400'}">${progressDone ? '<i class="fas fa-circle-check"></i>' : ''}${progress}%</span>
                         </div>
-                        <div class="w-full h-1.5 bg-navy-900 rounded-full overflow-hidden border border-slate-700">
+                        <div class="w-full h-2 bg-navy-900/80 rounded-full overflow-hidden">
                             <div class="h-full ${progressColor} rounded-full transition-all duration-300" style="width:${progress}%"></div>
                         </div>
                     </div>
@@ -680,7 +710,11 @@
 
             document.getElementById('process-modal').classList.remove('hidden');
             document.getElementById('process-modal').classList.add('flex');
-            
+            const panel = document.getElementById('process-modal-panel');
+            panel.classList.remove('modal-in');
+            void panel.offsetWidth; // reinicia a animação se o modal já estava visível
+            panel.classList.add('modal-in');
+
             renderModalContent(proc);
         };
 
@@ -725,15 +759,15 @@
             // Motorista / Placas (editável a qualquer momento, mesmo após a criação do processo)
             ctArea.innerHTML += `
             <div class="bg-navy-900 p-4 rounded-xl border border-slate-700 mb-6">
-                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Motorista / Veículo</h3>
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">Motorista / Veículo</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] uppercase text-slate-500 mb-1">Motorista</label>
-                        <input type="text" placeholder="Nome do motorista" maxlength="150" value="${escapeHtml(proc.motorista)}" onchange="updateProcessField('${proc.id}', 'motorista', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                        <input type="text" placeholder="Nome do motorista" maxlength="150" value="${escapeHtml(proc.motorista)}" onchange="updateProcessField('${proc.id}', 'motorista', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase text-slate-500 mb-1">Placas</label>
-                        <input type="text" placeholder="Ex: ABC1D23 e XYZ9F87" maxlength="150" value="${escapeHtml(proc.placas)}" onchange="updateProcessField('${proc.id}', 'placas', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                        <input type="text" placeholder="Ex: ABC1D23 e XYZ9F87" maxlength="150" value="${escapeHtml(proc.placas)}" onchange="updateProcessField('${proc.id}', 'placas', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
                     </div>
                 </div>
             </div>`;
@@ -742,13 +776,13 @@
             if(proc.status === 'active') {
                 ctArea.innerHTML += `
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-bold text-white">Unidades (${proc.containers.length})</h3>
-                    <button onclick="addNewContainerToProcess('${proc.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg shadow transition"><i class="fas fa-plus mr-2"></i>Novo Contêiner</button>
+                    <h3 class="text-lg font-bold text-white tracking-tight">Unidades (${proc.containers.length})</h3>
+                    <button onclick="addNewContainerToProcess('${proc.id}')" class="bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white text-sm font-semibold px-4 py-2 rounded-lg shadow transition"><i class="fas fa-plus mr-2"></i>Novo Contêiner</button>
                 </div>`;
             }
 
             if(proc.containers.length === 0) {
-                ctArea.innerHTML += `<div class="text-center p-8 text-slate-500 border border-dashed border-slate-700 rounded-lg">Nenhum contêiner adicionado a este processo.</div>`;
+                ctArea.innerHTML += `<div class="text-center p-8 text-slate-500 border border-dashed border-slate-700 rounded-xl">Nenhum contêiner adicionado a este processo.</div>`;
             }
             
             proc.containers.forEach((ct, index) => {
@@ -760,29 +794,29 @@
                 <div class="border-b border-slate-700 pb-4 mb-4">
                     <div class="flex justify-between items-start mb-3">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Contêiner ${index + 1}</span>
-                        ${proc.status === 'active' ? `<button onclick="deleteContainerFromProcess('${proc.id}', '${ct.id}')" class="text-slate-600 hover:text-red-500 transition" title="Remover"><i class="fas fa-trash"></i></button>` : ''}
+                        ${proc.status === 'active' ? `<button onclick="deleteContainerFromProcess('${proc.id}', '${ct.id}')" title="Remover" class="w-7 h-7 rounded-md text-slate-600 hover:text-red-400 hover:bg-red-900/20 transition flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>` : ''}
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Numeração</label>
-                            <input type="text" placeholder="Sem Número" value="${escapeHtml(ct.numero)}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Sem Número" value="${escapeHtml(ct.numero)}" onchange="updateField('${proc.id}', '${ct.id}', 'numero', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tipo / Equipamento</label>
-                            <input type="text" placeholder="Ex: 40HC" value="${escapeHtml(ct.tipo)}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Ex: 40HC" value="${escapeHtml(ct.tipo)}" onchange="updateField('${proc.id}', '${ct.id}', 'tipo', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
                         </div>
                     </div>`;
-                
+
                 if(proc.type === 'export') {
                     ctHeader += `
                     <div class="grid grid-cols-2 gap-4 mt-3">
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Tara</label>
-                            <input type="text" placeholder="Tara" value="${escapeHtml(ct.tara)}" onchange="updateField('${proc.id}', '${ct.id}', 'tara', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Tara" value="${escapeHtml(ct.tara)}" onchange="updateField('${proc.id}', '${ct.id}', 'tara', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
                         </div>
                         <div>
                             <label class="block text-[10px] uppercase text-slate-500 mb-1">Lacre</label>
-                            <input type="text" placeholder="Lacre" value="${escapeHtml(ct.lacre)}" onchange="updateField('${proc.id}', '${ct.id}', 'lacre', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none">
+                            <input type="text" placeholder="Lacre" value="${escapeHtml(ct.lacre)}" onchange="updateField('${proc.id}', '${ct.id}', 'lacre', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-800 border border-slate-600 rounded-lg p-2 text-sm text-white focus:border-blue-500 outline-none transition">
                         </div>
                     </div>`;
                 }
@@ -795,19 +829,27 @@
                     importChecklistSteps.forEach(step => {
                         const val = ct.checklist[step.id] || '';
                         if(step.type === 'checkbox') {
-                            const checked = val === 'true' ? 'checked' : '';
+                            const isChecked = val === 'true';
+                            const checked = isChecked ? 'checked' : '';
+                            const rowClass = isChecked
+                                ? 'flex items-center gap-3 text-sm text-slate-300 p-2.5 rounded-lg cursor-pointer transition border border-blue-800/40 bg-blue-900/10'
+                                : 'flex items-center gap-3 text-sm text-slate-300 hover:bg-navy-800 p-2.5 rounded-lg cursor-pointer transition border border-transparent hover:border-slate-700';
                             ctBody += `
-                            <label class="flex items-center gap-3 text-sm text-slate-300 hover:bg-navy-800 p-2 rounded cursor-pointer transition border border-transparent hover:border-slate-700">
+                            <label class="${rowClass}">
                                 <input type="checkbox" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.checked)" ${checked} ${proc.status === 'archived' ? 'disabled' : ''} class="w-4 h-4 accent-blue-500 bg-navy-800 border-slate-600 rounded">
-                                ${step.label}
+                                <span class="${isChecked ? 'text-slate-200' : ''}">${step.label}</span>
                             </label>`;
                         } else if(step.type === 'datetime') {
-                            const agendadoChecked = ct.checklist[`${step.id}_check`] === 'true' ? 'checked' : '';
+                            const isAgendado = ct.checklist[`${step.id}_check`] === 'true';
+                            const agendadoChecked = isAgendado ? 'checked' : '';
+                            const rowClass = isAgendado
+                                ? 'flex items-center justify-between text-sm text-slate-300 bg-emerald-900/10 p-3 rounded-lg border border-emerald-800/40 transition-colors'
+                                : 'flex items-center justify-between text-sm text-slate-300 bg-navy-800 p-3 rounded-lg border border-slate-700 transition-colors';
                             ctBody += `
-                            <div class="flex items-center justify-between text-sm text-slate-300 bg-navy-800 p-3 rounded-lg border border-slate-700">
-                                <span class="font-medium">${step.label}</span>
+                            <div class="${rowClass}">
+                                <span class="font-medium ${isAgendado ? 'text-slate-200' : ''}">${step.label}</span>
                                 <div class="flex items-center gap-2">
-                                    <input type="datetime-local" value="${escapeHtml(val)}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded p-1.5 text-xs text-white focus:border-blue-500 outline-none w-44">
+                                    <input type="datetime-local" value="${escapeHtml(val)}" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="bg-navy-900 border border-slate-600 rounded-md p-1.5 text-xs text-white focus:border-blue-500 outline-none w-44 transition">
                                     <label class="flex items-center gap-1 cursor-pointer" title="Marcar como agendado">
                                         <input type="checkbox" onchange="updateChecklist('${proc.id}', '${ct.id}', '${step.id}_check', this.checked)" ${agendadoChecked} ${proc.status === 'archived' ? 'disabled' : ''} class="w-4 h-4 accent-emerald-500 bg-navy-800 border-slate-600 rounded">
                                     </label>
@@ -822,24 +864,24 @@
                     <div class="grid grid-cols-2 gap-5 text-sm">
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Draft</label>
-                            <input type="datetime-local" value="${escapeHtml(ct.deadlineDraft)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                            <input type="datetime-local" value="${escapeHtml(ct.deadlineDraft)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineDraft', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Deadline Carga</label>
-                            <input type="datetime-local" value="${escapeHtml(ct.deadlineCarga)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                            <input type="datetime-local" value="${escapeHtml(ct.deadlineCarga)}" onchange="updateField('${proc.id}', '${ct.id}', 'deadlineCarga', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Retirada Vazio</label>
                             <div class="flex flex-col gap-2">
-                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termVazioExp', 'vazio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">${buildTerminalOptions('vazio', ct.termVazioExp)}</select>
-                                <input type="datetime-local" value="${escapeHtml(ct.agVazio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termVazioExp', 'vazio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">${buildTerminalOptions('vazio', ct.termVazioExp)}</select>
+                                <input type="datetime-local" value="${escapeHtml(ct.agVazio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agVazio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
                             </div>
                         </div>
                         <div class="bg-navy-800 p-3 rounded-lg border border-slate-700">
                             <label class="block text-[10px] uppercase font-bold text-slate-400 mb-2">Depósito Cheio</label>
                             <div class="flex flex-col gap-2">
-                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termCheioExp', 'cheio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">${buildTerminalOptions('cheio', ct.termCheioExp)}</select>
-                                <input type="datetime-local" value="${escapeHtml(ct.agCheio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded p-2 text-xs text-white focus:border-blue-500 outline-none">
+                                <select onchange="handleTerminalSelect(this, '${proc.id}', '${ct.id}', 'termCheioExp', 'cheio')" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">${buildTerminalOptions('cheio', ct.termCheioExp)}</select>
+                                <input type="datetime-local" value="${escapeHtml(ct.agCheio)}" onchange="updateField('${proc.id}', '${ct.id}', 'agCheio', this.value)" ${proc.status === 'archived' ? 'disabled' : ''} class="w-full bg-navy-900 border border-slate-600 rounded-md p-2 text-xs text-white focus:border-blue-500 outline-none transition">
                             </div>
                         </div>
                     </div>`;
@@ -961,14 +1003,58 @@
             width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1e293b; 
+            background: #1e293b;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155; 
+            background: #334155;
             border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #475569; 
+            background: #475569;
+        }
+
+        /* Faz os controles nativos (calendário do datetime-local, lista do
+           select, checkbox) desenharem na variante escura do navegador, em
+           vez do branco padrão que destoa do resto da tela. */
+        input, select {
+            color-scheme: dark;
+        }
+
+        /* Select com seta própria (discreta, na mesma paleta), no lugar da
+           seta padrão do navegador que fica inconsistente entre telas. */
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.65rem center;
+            background-size: 1.1em;
+            padding-right: 2.25rem;
+        }
+
+        /* Estado de foco por teclado, consistente nos botões/ícones que não
+           têm um estilo de foco próprio (inputs/selects já têm via Tailwind). */
+        button:focus-visible, a:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px #3b82f6;
+            border-radius: 0.5rem;
+        }
+
+        /* Uma única transição orquestrada na abertura do modal de detalhes. */
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(.97) translateY(4px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-in {
+            animation: modal-in .18s ease-out;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
         }
     </style>
 </body>
