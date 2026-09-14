@@ -251,6 +251,9 @@
                 </div>
             </div>
 
+            <!-- Alerta de Deadline Draft (só exportação) -->
+            <div id="m-draft-alert" class="hidden rounded-r-lg mx-5 mt-5 p-4"></div>
+
             <div class="flex-1 overflow-y-auto p-6 bg-navy-800 custom-scrollbar" id="m-containers-area">
                 <!-- Conteúdo gerado dinamicamente -->
             </div>
@@ -539,6 +542,19 @@
             }
         });
 
+        // Os lembretes de Deadline Draft (3/2/1 dia) dependem só da data/hora
+        // atual, não de uma mudança nos dados — então, se alguém deixar o
+        // LogiTrack aberto, atualizamos os cards e o modal periodicamente
+        // para o aviso "virar de dia" sozinho.
+        setInterval(() => {
+            if (!currentUser) return;
+            renderProcesses();
+            if (currentViewingProcessId) {
+                const proc = processes.find(p => p.id === currentViewingProcessId);
+                if (proc) renderModalContent(proc);
+            }
+        }, 30 * 60 * 1000);
+
         // SEGURANÇA: apenas login, sem auto-cadastro. Só entra quem já tem uma
         // conta criada manualmente pelo administrador em Firebase Console >
         // Authentication > Users > Add user. Nenhum novo usuário é criado a
@@ -727,6 +743,55 @@
             });
         };
 
+        // LEMBRETE DE DEADLINE DRAFT (só exportação, só o prazo do Draft, que é
+        // o mais importante). Olha a data/hora mais próxima entre todos os
+        // contêineres do processo e devolve um aviso quando faltam 3, 2 ou 1
+        // dia — ou quando já passou do prazo.
+        const draftAlertConfig = {
+            aviso:    { box: 'bg-yellow-900/15 border-yellow-500', icon: 'fa-clock', iconColor: 'text-yellow-500', text: 'text-yellow-500', badge: 'bg-yellow-900/10 text-yellow-500 border border-yellow-600/40' },
+            atencao:  { box: 'bg-blue-900/10 border-blue-400', icon: 'fa-clock', iconColor: 'text-blue-400', text: 'text-blue-400', badge: 'bg-blue-900/10 text-blue-400 border border-blue-400/40' },
+            urgente:  { box: 'bg-blue-900/15 border-blue-600', icon: 'fa-triangle-exclamation', iconColor: 'text-blue-600', text: 'text-blue-600', badge: 'bg-blue-900/15 text-blue-600 border border-blue-600/50' },
+            atrasado: { box: 'bg-blue-900/20 border-blue-900', icon: 'fa-triangle-exclamation', iconColor: 'text-blue-900', text: 'text-blue-900', badge: 'bg-blue-900/20 text-blue-900 border border-blue-900/50' }
+        };
+
+        // Um contêiner é considerado "com o Draft já cumprido" quando já tem
+        // Numeração, Tara e Lacre preenchidos — nesse ponto o lembrete não
+        // faz mais sentido pra ele, mesmo que o Deadline Draft esteja perto
+        // ou já tenha passado.
+        const draftJaCumprido = (ct) => {
+            return !!((ct.numero || '').trim() && (ct.tara || '').trim() && (ct.lacre || '').trim());
+        };
+
+        const getDraftDeadlineInfo = (proc) => {
+            if (proc.type !== 'export' || proc.status !== 'active' || !proc.containers) return null;
+
+            let maisProxima = null;
+            proc.containers.forEach(ct => {
+                if (!ct.deadlineDraft || draftJaCumprido(ct)) return;
+                const data = new Date(ct.deadlineDraft);
+                if (isNaN(data.getTime())) return;
+                if (!maisProxima || data < maisProxima) maisProxima = data;
+            });
+            if (!maisProxima) return null;
+
+            const diffMs = maisProxima.getTime() - Date.now();
+
+            if (diffMs <= 0) {
+                const diasAtraso = Math.floor(-diffMs / 86400000);
+                return {
+                    nivel: 'atrasado',
+                    texto: diasAtraso > 0 ? `Draft atrasado há ${diasAtraso} dia${diasAtraso > 1 ? 's' : ''}` : 'Draft venceu hoje'
+                };
+            }
+
+            const diasRestantes = Math.ceil(diffMs / 86400000);
+            if (diasRestantes > 3) return null;
+
+            const textos = { 1: 'Draft vence em 1 dia', 2: 'Draft vence em 2 dias', 3: 'Draft vence em 3 dias' };
+            const nivel = diasRestantes === 1 ? 'urgente' : (diasRestantes === 2 ? 'atencao' : 'aviso');
+            return { nivel, texto: textos[diasRestantes] };
+        };
+
         // Calcula o progresso (0-100) de um processo, para a barrinha do card.
         // Importação: conta as etapas do checklist (checkboxes + os checkmarks de
         // agendamento) marcadas como concluídas, em todos os contêineres.
@@ -797,6 +862,11 @@
                                        (proc.containers.some(c => c.termCheioExp && c.termCheioExp.toLowerCase().includes('embraport')))
                                        ? `<i class="fas fa-exclamation-triangle text-yellow-500 ml-2" title="Alerta Embraport"></i>` : '';
 
+                const draftInfo = getDraftDeadlineInfo(proc);
+                const draftBadge = draftInfo
+                    ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md text-[10px] font-bold ${draftAlertConfig[draftInfo.nivel].badge}"><i class="fas ${draftAlertConfig[draftInfo.nivel].icon}"></i>${escapeHtml(draftInfo.texto)}</div>`
+                    : '';
+
                 const progress = getProcessProgress(proc);
                 const progressDone = progress === 100;
                 const progressColor = progressDone ? 'bg-emerald-500' : 'bg-blue-500';
@@ -812,6 +882,7 @@
                             <div class="font-bold text-ink text-lg truncate group-hover:text-blue-400 transition-colors">${escapeHtml(title) || 'Sem Nome'}</div>
                             <div class="text-xs text-slate-400 mt-1.5"><i class="fas fa-ship mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.armador) || 'N/A'}</div>
                             <div class="text-xs text-slate-500 mt-1"><i class="fas fa-id-badge mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.motorista) || 'Motorista N/D'} <span class="mx-1 opacity-40">•</span><i class="fas fa-truck mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.placas) || 'Placas N/D'}</div>
+                            ${draftBadge}
                         </div>
                         <div class="sm:w-1/3 min-w-0 border-t sm:border-t-0 sm:border-l border-slate-700 pt-3 sm:pt-0 sm:pl-6">
                             <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Doc / Booking</div>
@@ -886,6 +957,24 @@
             
             if(hasEmbraport) alertBox.classList.remove('hidden');
             else alertBox.classList.add('hidden');
+
+            // Alerta de deadline draft (lembrete de 3/2/1 dia, só exportação)
+            const draftAlertBox = document.getElementById('m-draft-alert');
+            const draftInfo = getDraftDeadlineInfo(proc);
+            if (draftInfo) {
+                const cfg = draftAlertConfig[draftInfo.nivel];
+                draftAlertBox.className = `rounded-r-lg mx-5 mt-5 p-4 border-l-4 ${cfg.box}`;
+                draftAlertBox.innerHTML = `
+                    <div class="flex">
+                        <div class="flex-shrink-0"><i class="fas ${cfg.icon} ${cfg.iconColor} mt-0.5"></i></div>
+                        <div class="ml-3">
+                            <p class="text-sm ${cfg.text} font-bold">${escapeHtml(draftInfo.texto)}</p>
+                        </div>
+                    </div>`;
+            } else {
+                draftAlertBox.classList.add('hidden');
+                draftAlertBox.innerHTML = '';
+            }
 
             // Renderizar área de contêineres
             ctArea.innerHTML = '';
