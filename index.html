@@ -316,17 +316,19 @@
         </header>
 
         <div class="flex-1 p-4 sm:p-8 overflow-y-auto custom-scrollbar">
-            <!-- Resumo rápido: visão geral de todos os processos ativos (importação + exportação juntos) -->
-            <div class="grid grid-cols-3 gap-2.5 sm:gap-4 mb-4">
-                <div class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
-                    <div class="text-[10px] sm:text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Em andamento</div>
+            <!-- Resumo rápido: contagem sempre da aba selecionada no momento
+                 (Importações, Exportações ou Arquivados), nunca misturando os
+                 dois tipos — já que prazo de Draft só existe pra exportação. -->
+            <div id="resumo-bar" class="grid grid-cols-3 gap-2.5 sm:gap-4 mb-4">
+                <div id="resumo-total-box" class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
+                    <div id="resumo-total-label" class="text-[10px] sm:text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Em andamento</div>
                     <div id="resumo-total" class="text-xl sm:text-2xl font-bold text-ink">0</div>
                 </div>
-                <div class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
+                <div id="resumo-prazo-box" class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
                     <div class="text-[10px] sm:text-[11px] text-yellow-500 font-bold uppercase tracking-widest mb-0.5">Prazo próximo</div>
                     <div id="resumo-prazo" class="text-xl sm:text-2xl font-bold text-ink">0</div>
                 </div>
-                <div class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
+                <div id="resumo-atraso-box" class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
                     <div class="text-[10px] sm:text-[11px] text-blue-600 font-bold uppercase tracking-widest mb-0.5">Atrasados</div>
                     <div id="resumo-atraso" class="text-xl sm:text-2xl font-bold text-ink">0</div>
                 </div>
@@ -1128,26 +1130,58 @@
             return total === 0 ? 0 : Math.round((done / total) * 100);
         };
 
-        // RESUMO NO TOPO: conta processos ativos (importação + exportação
-        // juntos, independente da aba selecionada), com prazo de Draft
-        // próximo (3/2/1 dia) ou já atrasado. Reaproveita getDraftDeadlineInfo,
-        // a mesma função que já alimenta o aviso dentro de cada processo.
+        // RESUMO NO TOPO: sempre contando só a aba selecionada no momento
+        // (nunca importação + exportação misturados), já que o prazo de
+        // Draft só existe pra exportação — não faria sentido aparecer no
+        // resumo de Importações. Reaproveita getDraftDeadlineInfo, a mesma
+        // função que já alimenta o aviso dentro de cada processo.
         const renderResumo = () => {
-            const ativos = processes.filter(p => p.status === 'active');
+            const bar = document.getElementById('resumo-bar');
+            const boxPrazo = document.getElementById('resumo-prazo-box');
+            const boxAtraso = document.getElementById('resumo-atraso-box');
+            const elLabelTotal = document.getElementById('resumo-total-label');
+            const elTotal = document.getElementById('resumo-total');
+            const elPrazo = document.getElementById('resumo-prazo');
+            const elAtraso = document.getElementById('resumo-atraso');
+            if (!bar) return;
+
+            if (currentActiveTab === 'archive') {
+                elLabelTotal.textContent = 'Arquivados';
+                elTotal.textContent = processes.filter(p => p.status === 'archived').length;
+                bar.className = 'grid grid-cols-1 gap-2.5 sm:gap-4 mb-4';
+                boxPrazo.classList.add('hidden');
+                boxAtraso.classList.add('hidden');
+                return;
+            }
+
+            // Só exportação tem prazo de Draft, então os cartões de "Prazo
+            // próximo" e "Atrasados" só aparecem na aba de Exportações.
+            const isExport = currentActiveTab === 'export';
+            elLabelTotal.textContent = isExport ? 'Exportações em andamento' : 'Importações em andamento';
+
+            const relevantes = processes.filter(p => p.status === 'active' && p.type === currentActiveTab);
+            elTotal.textContent = relevantes.length;
+
+            if (!isExport) {
+                bar.className = 'grid grid-cols-1 gap-2.5 sm:gap-4 mb-4';
+                boxPrazo.classList.add('hidden');
+                boxAtraso.classList.add('hidden');
+                return;
+            }
+
+            bar.className = 'grid grid-cols-3 gap-2.5 sm:gap-4 mb-4';
+            boxPrazo.classList.remove('hidden');
+            boxAtraso.classList.remove('hidden');
+
             let prazoProximo = 0, atrasados = 0;
-            ativos.forEach(proc => {
+            relevantes.forEach(proc => {
                 const info = getDraftDeadlineInfo(proc);
                 if (!info) return;
                 if (info.nivel === 'atrasado') atrasados++;
                 else prazoProximo++;
             });
-
-            const elTotal = document.getElementById('resumo-total');
-            const elPrazo = document.getElementById('resumo-prazo');
-            const elAtraso = document.getElementById('resumo-atraso');
-            if (elTotal) elTotal.textContent = ativos.length;
-            if (elPrazo) elPrazo.textContent = prazoProximo;
-            if (elAtraso) elAtraso.textContent = atrasados;
+            elPrazo.textContent = prazoProximo;
+            elAtraso.textContent = atrasados;
         };
 
         // RENDERIZAR CARTÕES (TELA PRINCIPAL)
