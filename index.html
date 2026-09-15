@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogiTrack Pro - Gestão Logística</title>
 
+    <!-- Aplica o tema salvo (claro/escuro) ANTES de qualquer estilo carregar,
+         pra tela não "piscar" no tema errado ao abrir o app. -->
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('logitrack-theme') === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- PWA: instalável no celular/desktop (ícone, tela cheia, cor do tema) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#B10004">
@@ -27,35 +39,40 @@
         // original. Reaproveitamos os MESMOS nomes de classe (navy-900/800/700,
         // slate-*, blue-*) só trocando os valores hex, para não precisar mexer
         // em cada elemento do app.
+        //
+        // Cada cor aponta pra uma variável CSS (definida logo abaixo, com um
+        // valor para tema claro e outro para tema escuro) em vez de um hex
+        // fixo. O "rgb(var(...) / <alpha-value>)" é o formato que o Tailwind
+        // usa pra continuar funcionando com opacidade (ex: bg-blue-600/20).
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         navy: {
-                            900: '#F4F2EE', // fundo da página (cinza bem suave, não é branco)
-                            800: '#FEFDFB', // superfície dos cards/painéis (quase branco, levemente quente)
-                            700: '#ECE8E2', // preenchimento dos campos de formulário
+                            900: 'rgb(var(--navy-900) / <alpha-value>)', // fundo da página
+                            800: 'rgb(var(--navy-800) / <alpha-value>)', // superfície dos cards/painéis
+                            700: 'rgb(var(--navy-700) / <alpha-value>)', // preenchimento dos campos de formulário
                         },
                         slate: {
-                            200: '#1F1F1F', // texto secundário mais forte (ex: valor do Doc/Booking)
-                            300: '#2A2A2A', // texto principal do corpo
-                            400: '#5C5A57', // rótulos e texto secundário
-                            500: '#6E6C6B', // texto/ícones apagados (tom do cinza do logo, escurecido para manter contraste legível)
-                            600: '#D8D4CE', // bordas de input
-                            700: '#EAE7E2', // bordas de cards/painéis (bem sutil)
+                            200: 'rgb(var(--slate-200) / <alpha-value>)', // texto secundário mais forte (ex: valor do Doc/Booking)
+                            300: 'rgb(var(--slate-300) / <alpha-value>)', // texto principal do corpo
+                            400: 'rgb(var(--slate-400) / <alpha-value>)', // rótulos e texto secundário
+                            500: 'rgb(var(--slate-500) / <alpha-value>)', // texto/ícones apagados
+                            600: 'rgb(var(--slate-600) / <alpha-value>)', // bordas de input
+                            700: 'rgb(var(--slate-700) / <alpha-value>)', // bordas de cards/painéis
                         },
                         blue: { // usado como cor de destaque -> vermelho da marca
-                            300: '#8C0206',
-                            400: '#C1080B',
-                            500: '#D62A2E',
-                            600: '#B10004',
-                            800: '#B23239',
-                            900: '#7A0209',
+                            300: 'rgb(var(--blue-300) / <alpha-value>)',
+                            400: 'rgb(var(--blue-400) / <alpha-value>)',
+                            500: 'rgb(var(--blue-500) / <alpha-value>)',
+                            600: 'rgb(var(--blue-600) / <alpha-value>)',
+                            800: 'rgb(var(--blue-800) / <alpha-value>)',
+                            900: 'rgb(var(--blue-900) / <alpha-value>)',
                         },
-                        red: { 400: '#C8272D' }, // texto de erro/exclusão legível no fundo claro
-                        emerald: { 400: '#0B7D54' }, // texto de sucesso legível no fundo claro
-                        yellow: { 400: '#92400E', 500: '#B45309' }, // texto de alertas em amarelo/âmbar, legível no fundo claro
-                        ink: '#1A1A1A' // texto escuro (substitui o "branco" do tema antigo)
+                        red: { 400: 'rgb(var(--red-400) / <alpha-value>)' }, // texto de erro/exclusão
+                        emerald: { 400: 'rgb(var(--emerald-400) / <alpha-value>)' }, // texto de sucesso
+                        yellow: { 400: 'rgb(var(--yellow-400) / <alpha-value>)', 500: 'rgb(var(--yellow-500) / <alpha-value>)' }, // texto de alertas
+                        ink: 'rgb(var(--ink) / <alpha-value>)' // texto principal (escuro no tema claro, quase branco no escuro)
                     },
                     fontFamily: {
                         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
@@ -64,6 +81,57 @@
             }
         }
     </script>
+    <style>
+        /* Tema CLARO (padrão) — mesmos valores de sempre, em "R G B". */
+        :root {
+            --navy-900: 244 242 238;
+            --navy-800: 254 253 251;
+            --navy-700: 236 232 226;
+            --slate-200: 31 31 31;
+            --slate-300: 42 42 42;
+            --slate-400: 92 90 87;
+            --slate-500: 110 108 107;
+            --slate-600: 216 212 206;
+            --slate-700: 234 231 226;
+            --blue-300: 140 2 6;
+            --blue-400: 193 8 11;
+            --blue-500: 214 42 46;
+            --blue-600: 177 0 4;
+            --blue-800: 178 50 57;
+            --blue-900: 122 2 9;
+            --red-400: 200 39 45;
+            --emerald-400: 11 125 84;
+            --yellow-400: 146 64 14;
+            --yellow-500: 180 83 9;
+            --ink: 26 26 26;
+        }
+
+        /* Tema ESCURO — ativado adicionando data-theme="dark" na tag <html>
+           (o botão de alternar tema faz isso). Mesma paleta de destaque
+           (vermelho da marca), só que sobre um fundo navy escuro. */
+        :root[data-theme="dark"] {
+            --navy-900: 18 22 31;
+            --navy-800: 27 33 48;
+            --navy-700: 38 46 66;
+            --slate-200: 236 237 238;
+            --slate-300: 211 214 218;
+            --slate-400: 155 163 176;
+            --slate-500: 124 135 151;
+            --slate-600: 55 65 90;
+            --slate-700: 44 52 72;
+            --blue-300: 194 58 65;
+            --blue-400: 226 58 62;
+            --blue-500: 229 72 77;
+            --blue-600: 217 31 36;
+            --blue-800: 140 42 48;
+            --blue-900: 92 18 22;
+            --red-400: 255 107 110;
+            --emerald-400: 52 211 153;
+            --yellow-400: 251 191 36;
+            --yellow-500: 245 158 11;
+            --ink: 243 241 238;
+        }
+    </style>
 </head>
 <body class="bg-navy-900 text-slate-300 font-sans antialiased h-screen flex overflow-hidden">
 
@@ -239,10 +307,30 @@
                     <button id="tab-archive" class="shrink-0 text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors">Arquivados</button>
                 </div>
             </div>
-            <div class="flex items-center gap-2 text-sm text-slate-300 bg-navy-900 pl-2 pr-3.5 py-1.5 rounded-full border border-slate-700 shrink-0" id="user-display"></div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button id="btn-toggle-theme" onclick="toggleTheme()" title="Alternar modo claro/escuro" class="w-9 h-9 rounded-full text-slate-400 hover:text-ink hover:bg-navy-900 transition flex items-center justify-center border border-slate-700">
+                    <i class="fas fa-moon text-sm"></i>
+                </button>
+                <div class="flex items-center gap-2 text-sm text-slate-300 bg-navy-900 pl-2 pr-3.5 py-1.5 rounded-full border border-slate-700" id="user-display"></div>
+            </div>
         </header>
 
         <div class="flex-1 p-4 sm:p-8 overflow-y-auto custom-scrollbar">
+            <!-- Resumo rápido: visão geral de todos os processos ativos (importação + exportação juntos) -->
+            <div class="grid grid-cols-3 gap-2.5 sm:gap-4 mb-4">
+                <div class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
+                    <div class="text-[10px] sm:text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Em andamento</div>
+                    <div id="resumo-total" class="text-xl sm:text-2xl font-bold text-ink">0</div>
+                </div>
+                <div class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
+                    <div class="text-[10px] sm:text-[11px] text-yellow-500 font-bold uppercase tracking-widest mb-0.5">Prazo próximo</div>
+                    <div id="resumo-prazo" class="text-xl sm:text-2xl font-bold text-ink">0</div>
+                </div>
+                <div class="bg-navy-800 border border-slate-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3">
+                    <div class="text-[10px] sm:text-[11px] text-blue-600 font-bold uppercase tracking-widest mb-0.5">Atrasados</div>
+                    <div id="resumo-atraso" class="text-xl sm:text-2xl font-bold text-ink">0</div>
+                </div>
+            </div>
             <div class="relative mb-4">
                 <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
                 <input type="text" id="search-processos" placeholder="Buscar por armador, motorista, placa, documento/booking ou nº do contêiner..." oninput="filterProcesses(this.value)" class="w-full pl-9 pr-9 py-2.5 text-sm border border-slate-600 rounded-lg bg-navy-800 text-ink focus:border-blue-500 outline-none transition">
@@ -276,9 +364,10 @@
                 <!-- Conteúdo gerado dinamicamente -->
             </div>
 
-            <div class="p-5 border-t border-slate-700 bg-navy-900 flex justify-between items-center">
+            <div class="p-5 border-t border-slate-700 bg-navy-900 flex flex-wrap justify-between items-center gap-3">
                 <button id="btn-delete-process" class="px-5 py-2.5 text-red-400 font-semibold hover:bg-red-900/20 rounded-lg transition border border-red-900/50 hover:border-red-700"><i class="fas fa-trash mr-2"></i> Excluir Processo</button>
-                <div class="flex gap-3">
+                <div class="flex flex-wrap gap-3">
+                    <button id="btn-export-pdf" class="px-5 py-2.5 text-slate-300 font-semibold hover:bg-navy-700 rounded-lg transition border border-slate-600"><i class="fas fa-file-pdf mr-2"></i> Exportar PDF</button>
                     <button onclick="closeModal()" class="px-5 py-2.5 text-slate-300 font-semibold hover:bg-navy-700 rounded-lg transition border border-transparent hover:border-slate-600">Fechar</button>
                     <button id="btn-unarchive-process" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-blue-900/30 hover:bg-blue-500 transition hidden"><i class="fas fa-box-open mr-2"></i> Desarquivar Processo</button>
                     <button id="btn-archive-process" class="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-lg shadow-emerald-900/30 hover:bg-emerald-500 transition hidden"><i class="fas fa-check-double mr-2"></i> Arquivar Processo</button>
@@ -286,6 +375,11 @@
             </div>
         </div>
     </div>
+
+    <!-- Área usada só na hora de exportar um processo em PDF: fica escondida
+         na tela normal e só aparece quando o navegador entra em modo de
+         impressão (Ctrl+P / "Salvar como PDF"), via CSS no final do arquivo. -->
+    <div id="print-area"></div>
 
     <!-- Firebase SDKs e Lógica -->
     <script type="module">
@@ -346,6 +440,25 @@
             document.getElementById('sidebar-backdrop').classList.add('hidden');
         };
 
+        // MODO ESCURO (opcional, fica salvo no navegador de cada pessoa)
+        const applyThemeIcon = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const icon = document.querySelector('#btn-toggle-theme i');
+            if (icon) icon.className = isDark ? 'fas fa-sun text-sm' : 'fas fa-moon text-sm';
+        };
+        window.toggleTheme = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('logitrack-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('logitrack-theme', 'dark');
+            }
+            applyThemeIcon();
+        };
+        applyThemeIcon(); // reflete no ícone o tema já aplicado (definido no script do head)
+
         // SEGURANÇA: escapa qualquer valor antes de inseri-lo via innerHTML,
         // impedindo que texto digitado pelo usuário (armador, número de contêiner,
         // e-mail, etc.) seja interpretado como HTML/JS (XSS armazenado).
@@ -357,6 +470,16 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        };
+
+        // Converte o valor de um <input type="datetime-local"> (ex:
+        // "2026-09-20T14:30") pro formato usado no dia a dia (dd/mm/aaaa hh:mm).
+        const formatarDataHora = (valor) => {
+            if (!valor) return '—';
+            const data = new Date(valor);
+            if (isNaN(data.getTime())) return '—';
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${pad(data.getDate())}/${pad(data.getMonth() + 1)}/${data.getFullYear()} ${pad(data.getHours())}:${pad(data.getMinutes())}`;
         };
 
         // TABELA DE VALORES DO DÍGITO VERIFICADOR (norma ISO 6346), usada para
@@ -1005,11 +1128,34 @@
             return total === 0 ? 0 : Math.round((done / total) * 100);
         };
 
+        // RESUMO NO TOPO: conta processos ativos (importação + exportação
+        // juntos, independente da aba selecionada), com prazo de Draft
+        // próximo (3/2/1 dia) ou já atrasado. Reaproveita getDraftDeadlineInfo,
+        // a mesma função que já alimenta o aviso dentro de cada processo.
+        const renderResumo = () => {
+            const ativos = processes.filter(p => p.status === 'active');
+            let prazoProximo = 0, atrasados = 0;
+            ativos.forEach(proc => {
+                const info = getDraftDeadlineInfo(proc);
+                if (!info) return;
+                if (info.nivel === 'atrasado') atrasados++;
+                else prazoProximo++;
+            });
+
+            const elTotal = document.getElementById('resumo-total');
+            const elPrazo = document.getElementById('resumo-prazo');
+            const elAtraso = document.getElementById('resumo-atraso');
+            if (elTotal) elTotal.textContent = ativos.length;
+            if (elPrazo) elPrazo.textContent = prazoProximo;
+            if (elAtraso) elAtraso.textContent = atrasados;
+        };
+
         // RENDERIZAR CARTÕES (TELA PRINCIPAL)
         const renderProcesses = () => {
+            renderResumo();
             const container = document.getElementById('processes-container');
             container.innerHTML = '';
-            
+
             let filtered = processes.filter(p => {
                 if(currentActiveTab === 'archive') return p.status === 'archived';
                 if(currentActiveTab === 'import') return p.status === 'active' && p.type === 'import';
@@ -1326,6 +1472,78 @@
 
             // Excluir processo está sempre disponível, ativo ou arquivado
             btnDelete.onclick = () => deleteProcess(proc.id);
+
+            document.getElementById('btn-export-pdf').onclick = () => exportProcessoPDF(proc.id);
+        };
+
+        // EXPORTAR PROCESSO EM PDF
+        // Monta uma versão "limpa" (preto no branco, sem depender do tema
+        // claro/escuro da tela) só com os dados do processo, e abre a caixa
+        // de impressão do navegador — a pessoa escolhe "Salvar como PDF" ali.
+        // Não precisa de nenhuma biblioteca externa nem de internet.
+        window.exportProcessoPDF = (procId) => {
+            const proc = processes.find(p => p.id === procId);
+            if (!proc) return;
+
+            const isImport = proc.type === 'import';
+            const titulo = isImport ? (proc.importador || 'Processo de Importação') : (proc.exportador || 'Processo de Exportação');
+            const docLabel = isImport
+                ? (proc.documentoTipo ? `${proc.documentoTipo}: ${proc.documentoNumero || '—'}` : (proc.documento || '—'))
+                : `Booking: ${proc.booking || '—'} | Ref: ${proc.referencia || '—'} | Navio: ${proc.navio || '—'}`;
+
+            let html = `
+                <div style="border-bottom:2px solid #B10004; padding-bottom:12px; margin-bottom:16px;">
+                    <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#666;">LogiTrack Pro — Transportes Imigrantes</div>
+                    <div style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#B10004; font-weight:bold; margin-top:4px;">${isImport ? 'Importação' : 'Exportação'}</div>
+                    <h1 style="font-size:20px; margin:4px 0 0;">${escapeHtml(titulo)}</h1>
+                    <div style="font-size:12px; color:#444; margin-top:2px;">${escapeHtml(docLabel)}</div>
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:18px;">
+                    <tr><td style="padding:4px 8px 4px 0; color:#666; width:140px;">Armador</td><td style="padding:4px 0; font-weight:bold;">${escapeHtml(proc.armador) || '—'}</td></tr>
+                    <tr><td style="padding:4px 8px 4px 0; color:#666;">Motorista</td><td style="padding:4px 0;">${escapeHtml(proc.motorista) || '—'}</td></tr>
+                    <tr><td style="padding:4px 8px 4px 0; color:#666;">Placas</td><td style="padding:4px 0;">${escapeHtml(proc.placas) || '—'}</td></tr>
+                    ${proc.observacoes ? `<tr><td style="padding:4px 8px 4px 0; color:#666; vertical-align:top;">Observações</td><td style="padding:4px 0;">${escapeHtml(proc.observacoes)}</td></tr>` : ''}
+                </table>
+            `;
+
+            (proc.containers || []).forEach((ct, index) => {
+                html += `<div style="border:1px solid #ccc; border-radius:6px; padding:12px 14px; margin-bottom:12px; break-inside: avoid;">`;
+                html += `<div style="font-size:12px; font-weight:bold; margin-bottom:8px;">Contêiner ${index + 1} — ${escapeHtml(ct.numero) || 'Sem número'} ${ct.tipo ? '(' + escapeHtml(ct.tipo) + ')' : ''}</div>`;
+
+                if (!isImport) {
+                    html += `<div style="font-size:11px; color:#444; margin-bottom:8px;">Tara: ${escapeHtml(ct.tara) || '—'} &nbsp;|&nbsp; Lacre: ${escapeHtml(ct.lacre) || '—'}</div>`;
+                }
+
+                html += `<table style="width:100%; border-collapse:collapse; font-size:11px;">`;
+                if (isImport) {
+                    importChecklistSteps.forEach(step => {
+                        if (step.type === 'checkbox') {
+                            const feito = ct.checklist && ct.checklist[step.id] === 'true';
+                            html += `<tr><td style="padding:3px 0; width:20px;">${feito ? '&#9989;' : '&#9744;'}</td><td style="padding:3px 0;">${escapeHtml(step.label)}</td></tr>`;
+                        } else {
+                            const valor = ct.checklist ? ct.checklist[step.id] : '';
+                            const feito = ct.checklist && ct.checklist[`${step.id}_check`] === 'true';
+                            html += `<tr><td style="padding:3px 0; width:20px;">${feito ? '&#9989;' : '&#9744;'}</td><td style="padding:3px 0;">${escapeHtml(step.label)}</td><td style="padding:3px 0; text-align:right; color:#444;">${formatarDataHora(valor)}</td></tr>`;
+                        }
+                    });
+                } else {
+                    const linhas = [
+                        ['Deadline Draft', ct.deadlineDraft],
+                        ['Deadline Carga', ct.deadlineCarga],
+                        [`Retirada Vazio${ct.termVazioExp ? ' — ' + escapeHtml(ct.termVazioExp) : ''}`, ct.agVazio],
+                        [`Depósito Cheio${ct.termCheioExp ? ' — ' + escapeHtml(ct.termCheioExp) : ''}`, ct.agCheio],
+                    ];
+                    linhas.forEach(([label, valor]) => {
+                        html += `<tr><td style="padding:3px 0;">${label}</td><td style="padding:3px 0; text-align:right; color:#444;">${formatarDataHora(valor)}</td></tr>`;
+                    });
+                }
+                html += `</table></div>`;
+            });
+
+            html += `<div style="margin-top:20px; font-size:10px; color:#888; border-top:1px solid #ddd; padding-top:8px;">Gerado em ${formatarDataHora(new Date().toISOString().slice(0, 16))} pelo LogiTrack Pro.</div>`;
+
+            document.getElementById('print-area').innerHTML = html;
+            window.print();
         };
 
         // FUNÇÕES DE ATUALIZAÇÃO NO FIREBASE (AUTO-SAVE)
@@ -1426,20 +1644,24 @@
             width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #F4F2EE;
+            background: rgb(var(--navy-900));
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #D8D4CE;
+            background: rgb(var(--slate-600));
             border-radius: 10px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #BFBAB2;
+            background: rgb(var(--slate-500));
         }
 
         /* Faz os controles nativos (calendário do datetime-local, lista do
-           select, checkbox) desenharem na variante clara do navegador. */
+           select, checkbox) desenharem na variante clara do navegador — e na
+           escura quando o modo escuro está ativo. */
         input, select {
             color-scheme: light;
+        }
+        :root[data-theme="dark"] input, :root[data-theme="dark"] select {
+            color-scheme: dark;
         }
 
         /* Select com seta própria (discreta, na mesma paleta), no lugar da
@@ -1453,12 +1675,15 @@
             background-size: 1.1em;
             padding-right: 2.25rem;
         }
+        :root[data-theme="dark"] select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%239BA3B0'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.19l3.71-3.96a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+        }
 
         /* Estado de foco por teclado, consistente nos botões/ícones que não
            têm um estilo de foco próprio (inputs/selects já têm via Tailwind). */
         button:focus-visible, a:focus-visible {
             outline: none;
-            box-shadow: 0 0 0 2px #F4F2EE, 0 0 0 4px #B10004;
+            box-shadow: 0 0 0 2px rgb(var(--navy-900)), 0 0 0 4px rgb(var(--blue-600));
             border-radius: 0.5rem;
         }
 
@@ -1476,6 +1701,35 @@
                 animation-duration: .01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: .01ms !important;
+            }
+        }
+
+        /* Exportar processo em PDF: a área #print-area fica sempre escondida
+           na tela normal. Quando o navegador entra em modo de impressão
+           (chamado via window.print(), no botão "Exportar PDF"), escondemos
+           tudo e mostramos só ela — assim dá pra "Salvar como PDF" só com o
+           conteúdo do processo, com fundo branco e texto preto (independe
+           do tema claro/escuro estar ativo na tela). */
+        #print-area {
+            display: none;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                background: #fff;
+                color: #111;
+                padding: 24px;
+                font-family: Inter, ui-sans-serif, system-ui, sans-serif;
             }
         }
     </style>
