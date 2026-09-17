@@ -29,6 +29,8 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- SortableJS: usado para permitir arrastar e reordenar os cards de processo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -488,6 +490,45 @@
             if (isNaN(data.getTime())) return '—';
             const pad = (n) => String(n).padStart(2, '0');
             return `${pad(data.getDate())}/${pad(data.getMonth() + 1)}/${data.getFullYear()} ${pad(data.getHours())}:${pad(data.getMinutes())}`;
+        };
+
+        // Versão compacta (sem ano), usada no card da tela principal onde o
+        // espaço é mais apertado. Retorna null se não houver data válida, pra
+        // quem chamar decidir se mostra alguma coisa no lugar ou nada.
+        const formatarDataHoraCurta = (valor) => {
+            if (!valor) return null;
+            const data = new Date(valor);
+            if (isNaN(data.getTime())) return null;
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${pad(data.getDate())}/${pad(data.getMonth() + 1)} ${pad(data.getHours())}:${pad(data.getMinutes())}`;
+        };
+
+        // ORDEM PERSONALIZADA DOS CARDS (arrastar para reordenar). Fica salva
+        // só neste navegador (localStorage) — é uma preferência pessoal, não
+        // é compartilhada com o resto da equipe.
+        let cardSortable = null; // instância do SortableJS ativa no momento, se houver
+
+        const getCardOrder = () => {
+            try {
+                const raw = localStorage.getItem('logitrack-card-order');
+                const arr = raw ? JSON.parse(raw) : [];
+                return Array.isArray(arr) ? arr : [];
+            } catch (e) {
+                return [];
+            }
+        };
+
+        // Lê a ordem atual dos cards no DOM (depois de um drag) e salva.
+        // Ids que já estavam guardados mas não aparecem nesta tela (ex: de
+        // outra aba) são mantidos no fim, preservando a posição deles.
+        const saveCardOrderFromContainer = (container) => {
+            const idsNaTela = Array.from(container.children)
+                .map(el => el.dataset.processId)
+                .filter(Boolean);
+            const resto = getCardOrder().filter(id => !idsNaTela.includes(id));
+            try {
+                localStorage.setItem('logitrack-card-order', JSON.stringify([...idsNaTela, ...resto]));
+            } catch (e) {}
         };
 
         // TABELA DE VALORES DO DÍGITO VERIFICADOR (norma ISO 6346), usada para
@@ -1196,6 +1237,13 @@
             const container = document.getElementById('processes-container');
             container.innerHTML = '';
 
+            // Desfaz a instância de arrastar-e-soltar do render anterior (se
+            // houver) antes de montar os cards de novo.
+            if (cardSortable) {
+                cardSortable.destroy();
+                cardSortable = null;
+            }
+
             let filtered = processes.filter(p => {
                 if(currentActiveTab === 'archive') return p.status === 'archived';
                 if(currentActiveTab === 'import') return p.status === 'active' && p.type === 'import';
@@ -1231,7 +1279,24 @@
                 return;
             }
 
-            filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(proc => {
+            filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            // Aplica a ordem escolhida pelo usuário (se ele já arrastou algum
+            // card antes). Quem não tem posição salva continua ordenado por
+            // data (o sort acima), aparecendo depois de quem já foi arrastado
+            // — o sort do JS é estável, então essa ordem relativa é preservada.
+            const ordemSalva = getCardOrder();
+            const sortableAtivo = !searchQuery && currentActiveTab !== 'archive';
+            if (sortableAtivo && ordemSalva.length) {
+                const indice = new Map(ordemSalva.map((id, i) => [id, i]));
+                filtered.sort((a, b) => {
+                    const ai = indice.has(a.id) ? indice.get(a.id) : Infinity;
+                    const bi = indice.has(b.id) ? indice.get(b.id) : Infinity;
+                    return ai - bi;
+                });
+            }
+
+            filtered.forEach(proc => {
                 const title = proc.type === 'import' ? proc.importador : proc.exportador;
                 const docRef = proc.type === 'import'
                     ? (proc.documentoTipo ? `${proc.documentoTipo}: ${proc.documentoNumero || ''}` : proc.documento)
@@ -1253,21 +1318,35 @@
                     ? `<div class="inline-flex items-center gap-1.5 mt-2 px-2 py-1 rounded-md text-[10px] font-bold bg-slate-500/10 text-slate-500 border border-slate-600/40" title="${escapeHtml(proc.observacoes)}"><i class="fas fa-note-sticky"></i>Observação</div>`
                     : '';
 
+                // Agendamento de Carregamento (só existe no checklist de
+                // importação, e é por contêiner): mostra o mais próximo entre
+                // os contêineres do processo, se algum já estiver preenchido.
+                const agCargaValores = proc.type === 'import'
+                    ? proc.containers.map(c => c.checklist && c.checklist.ag_carga).filter(Boolean).sort()
+                    : [];
+                const agCargaTexto = agCargaValores.length > 0 ? formatarDataHoraCurta(agCargaValores[0]) : null;
+                const agCargaInfo = agCargaTexto
+                    ? `<div class="text-xs text-slate-500 mt-1"><i class="fas fa-calendar-check mr-1.5 opacity-50 w-3 inline-block"></i>Carreg.: ${escapeHtml(agCargaTexto)}</div>`
+                    : '';
+
                 const progress = getProcessProgress(proc);
                 const progressDone = progress === 100;
                 const progressColor = progressDone ? 'bg-emerald-500' : 'bg-blue-500';
 
                 const card = document.createElement('div');
-                card.className = "bg-navy-800 p-5 rounded-2xl shadow-lg border border-slate-700 cursor-pointer hover:border-blue-500/70 hover:shadow-xl hover:shadow-blue-900/20 hover:-translate-y-0.5 transition-all group";
+                card.className = "relative bg-navy-800 p-5 rounded-2xl shadow-lg border border-slate-700 cursor-pointer hover:border-blue-500/70 hover:shadow-xl hover:shadow-blue-900/20 hover:-translate-y-0.5 transition-all group";
+                card.dataset.processId = proc.id;
                 card.onclick = () => openModal(proc.id);
 
                 card.innerHTML = `
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full">
+                    ${sortableAtivo ? `<div class="card-drag-handle absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-navy-900/60 cursor-grab active:cursor-grabbing transition-colors z-10" onclick="event.stopPropagation()" title="Arrastar para reordenar"><i class="fas fa-grip-vertical text-xs"></i></div>` : ''}
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full ${sortableAtivo ? 'sm:pr-8' : ''}">
                         <div class="sm:w-1/3 min-w-0">
                             <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-1">${proc.type === 'import' ? 'Importação' : 'Exportação'}</div>
                             <div class="font-bold text-ink text-lg truncate group-hover:text-blue-400 transition-colors">${escapeHtml(title) || 'Sem Nome'}</div>
                             <div class="text-xs text-slate-400 mt-1.5"><i class="fas fa-ship mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.armador) || 'N/A'}</div>
                             <div class="text-xs text-slate-500 mt-1"><i class="fas fa-id-badge mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.motorista) || 'Motorista N/D'} <span class="mx-1 opacity-40">•</span><i class="fas fa-truck mr-1.5 opacity-50 w-3 inline-block"></i>${escapeHtml(proc.placas) || 'Placas N/D'}</div>
+                            ${agCargaInfo}
                             ${draftBadge}
                             ${obsBadge}
                         </div>
@@ -1292,6 +1371,18 @@
                 `;
                 container.appendChild(card);
             });
+
+            // Ativa o arrastar-e-soltar (só na visão normal, sem busca e fora
+            // do arquivo — ver "sortableAtivo" acima). O handle (ícone de
+            // grade no canto do card) evita que arrastar dispare o clique
+            // que abre o modal do processo.
+            if (sortableAtivo && filtered.length > 1) {
+                cardSortable = new Sortable(container, {
+                    handle: '.card-drag-handle',
+                    animation: 150,
+                    onEnd: () => saveCardOrderFromContainer(container)
+                });
+            }
         };
 
         // CONTROLE DO MODAL
