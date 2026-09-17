@@ -133,6 +133,33 @@
             --yellow-500: 245 158 11;
             --ink: 243 241 238;
         }
+
+        /* Transição suave ao alternar entre tema claro/escuro: em vez da cor
+           de fundo/texto/borda mudar de uma vez, desliza suavemente entre os
+           dois tons. @media (prefers-reduced-motion) mais abaixo já zera a
+           duração pra quem prefere menos animação na tela. */
+        *, *::before, *::after {
+            transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+            transition-duration: .25s;
+            transition-timing-function: ease;
+        }
+
+        /* Toasts de feedback rápido (ex: "Processo criado com sucesso"),
+           mostrados no canto inferior direito da tela. */
+        .toast-item {
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity .25s ease, transform .25s ease;
+        }
+        .toast-item.toast-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast-item.toast-out {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
     </style>
 </head>
 <body class="bg-navy-900 text-slate-300 font-sans antialiased h-screen flex overflow-hidden">
@@ -394,6 +421,11 @@
          impressão (Ctrl+P / "Salvar como PDF"), via CSS no final do arquivo. -->
     <div id="print-area"></div>
 
+    <!-- Container das notificações rápidas (toasts) de feedback de ações,
+         tipo "Processo criado com sucesso". Fica sempre no canto da tela,
+         acima de tudo, e cada toast some sozinho depois de alguns segundos. -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 items-end pointer-events-none max-w-[calc(100vw-2rem)]"></div>
+
     <!-- Firebase SDKs e Lógica -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -483,6 +515,31 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        };
+
+        // NOTIFICAÇÕES RÁPIDAS (TOAST): feedback visual curto depois de uma
+        // ação (criar processo, arquivar, excluir, remover contêiner), pra
+        // confirmar que realmente aconteceu, sem precisar de um alert() que
+        // interrompe o uso. Some sozinho depois de alguns segundos.
+        const TOAST_STYLES = {
+            success: { icon: 'fa-circle-check', classes: 'border-emerald-500 text-emerald-500' },
+            error:   { icon: 'fa-circle-exclamation', classes: 'border-red-400 text-red-400' },
+            info:    { icon: 'fa-circle-info', classes: 'border-blue-500 text-blue-500' }
+        };
+        const showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const cfg = TOAST_STYLES[type] || TOAST_STYLES.success;
+            const el = document.createElement('div');
+            el.className = `toast-item flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-lg text-sm font-semibold bg-navy-800 text-ink ${cfg.classes}`;
+            el.innerHTML = `<i class="fas ${cfg.icon}"></i><span>${escapeHtml(message)}</span>`;
+            container.appendChild(el);
+            requestAnimationFrame(() => el.classList.add('toast-in'));
+            setTimeout(() => {
+                el.classList.remove('toast-in');
+                el.classList.add('toast-out');
+                setTimeout(() => el.remove(), 300);
+            }, 3200);
         };
 
         // Converte o valor de um <input type="datetime-local"> (ex:
@@ -892,6 +949,15 @@
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             const errorDiv = document.getElementById('auth-error');
+            const btnLogin = document.getElementById('btn-login');
+
+            // Mostra um estado de carregamento no botão enquanto aguarda o
+            // Firebase responder, pra não parecer que travou numa internet
+            // mais lenta. Restaura o texto original ao final, dando certo ou
+            // não (o "finally" garante isso mesmo se der erro).
+            const textoOriginalBtn = btnLogin.innerHTML;
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
 
             try {
                 await signInWithEmailAndPassword(auth, email, password);
@@ -904,6 +970,9 @@
                     errorDiv.innerText = "Erro no login: " + error.message;
                 }
                 errorDiv.classList.remove('hidden');
+            } finally {
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = textoOriginalBtn;
             }
         });
 
@@ -1079,14 +1148,47 @@
                 containerCount = 0;
                 setMainTab(type); // Muda para a aba correspondente para ver o processo criado
                 closeSidebarMobile(); // no celular, fecha a gaveta do menu após criar (sem efeito no desktop)
+                showToast('Processo criado com sucesso.');
             } catch (error) {
                 console.error("Erro ao salvar:", error);
                 alert("Erro ao criar processo.");
             }
         });
 
+        // Placeholders "pulsando" mostrados só entre o login e a primeira
+        // resposta do Firestore, pra tela não ficar em branco enquanto
+        // carrega. Assim que os dados chegam, renderProcesses() substitui
+        // esse conteúdo pelos cards de verdade.
+        const renderProcessesSkeleton = () => {
+            const container = document.getElementById('processes-container');
+            if (!container) return;
+            const skeletonCard = `
+                <div class="bg-navy-800 p-5 rounded-2xl shadow-lg border border-slate-700 animate-pulse">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full">
+                        <div class="sm:w-1/3 min-w-0 space-y-2.5">
+                            <div class="h-2.5 w-16 bg-navy-700 rounded"></div>
+                            <div class="h-4 w-32 bg-navy-700 rounded"></div>
+                            <div class="h-2.5 w-24 bg-navy-700 rounded"></div>
+                        </div>
+                        <div class="sm:w-1/3 min-w-0 space-y-2.5 border-t sm:border-t-0 sm:border-l border-slate-700 pt-3 sm:pt-0 sm:pl-6">
+                            <div class="h-2.5 w-20 bg-navy-700 rounded"></div>
+                            <div class="h-4 w-28 bg-navy-700 rounded"></div>
+                        </div>
+                        <div class="sm:w-1/3 flex flex-col items-start sm:items-end space-y-2.5">
+                            <div class="h-2.5 w-16 bg-navy-700 rounded"></div>
+                            <div class="h-5 w-24 bg-navy-700 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-700/60">
+                        <div class="h-1.5 w-full bg-navy-700 rounded-full"></div>
+                    </div>
+                </div>`;
+            container.innerHTML = skeletonCard.repeat(3);
+        };
+
         // LER DO FIREBASE
         const loadProcesses = () => {
+            renderProcessesSkeleton();
             const q = query(collection(db, "processes"), where("userId", "==", currentUser.uid));
             onSnapshot(q, (snapshot) => {
                 processes = [];
@@ -1340,8 +1442,28 @@
                 const progressDone = progress === 100;
                 const progressColor = progressDone ? 'bg-emerald-500' : 'bg-blue-500';
 
+                // Faixa colorida na borda esquerda do card, pra dar pra
+                // escanear o status de cada processo de relance, sem precisar
+                // ler o card inteiro. Reaproveita as mesmas cores já usadas
+                // no aviso de Deadline Draft e na barra de progresso, então
+                // não introduz nenhum tom novo no app.
+                const draftBorderMap = {
+                    aviso: 'border-l-yellow-500',
+                    atencao: 'border-l-blue-400',
+                    urgente: 'border-l-blue-600',
+                    atrasado: 'border-l-blue-900'
+                };
+                let statusBorderClass = 'border-l-blue-500'; // padrão: em andamento
+                if (proc.status === 'archived') {
+                    statusBorderClass = 'border-l-slate-600';
+                } else if (draftInfo) {
+                    statusBorderClass = draftBorderMap[draftInfo.nivel] || statusBorderClass;
+                } else if (progressDone) {
+                    statusBorderClass = 'border-l-emerald-500';
+                }
+
                 const card = document.createElement('div');
-                card.className = "relative bg-navy-800 p-5 rounded-2xl shadow-lg border border-slate-700 cursor-pointer hover:border-blue-500/70 hover:shadow-xl hover:shadow-blue-900/20 hover:-translate-y-0.5 transition-all group";
+                card.className = `relative bg-navy-800 p-5 rounded-2xl shadow-lg border border-slate-700 border-l-4 ${statusBorderClass} cursor-pointer hover:border-t-blue-500/70 hover:border-r-blue-500/70 hover:border-b-blue-500/70 hover:shadow-xl hover:shadow-blue-900/20 hover:-translate-y-0.5 transition-all group`;
                 card.dataset.processId = proc.id;
                 card.onclick = () => openModal(proc.id);
 
@@ -1872,6 +1994,7 @@
                 const ref = doc(db, "processes", procId);
                 proc.containers = proc.containers.filter(c => c.id !== ctId);
                 await updateDoc(ref, { containers: proc.containers });
+                showToast('Contêiner removido.');
             }
         };
 
@@ -1880,6 +2003,7 @@
                 const ref = doc(db, "processes", procId);
                 await updateDoc(ref, { status: 'archived' });
                 closeModal();
+                showToast('Processo movido para Arquivados.');
             }
         };
 
@@ -1888,6 +2012,7 @@
                 const ref = doc(db, "processes", procId);
                 await updateDoc(ref, { status: 'active' });
                 closeModal();
+                showToast('Processo restaurado para Ativos.');
             }
         };
 
@@ -1897,6 +2022,7 @@
                     const ref = doc(db, "processes", procId);
                     await deleteDoc(ref);
                     closeModal();
+                    showToast('Processo excluído.');
                 } catch (error) {
                     console.error("Erro ao excluir:", error);
                     alert("Erro ao excluir processo. Verifique as regras de segurança do Firestore (permissão de delete).");
