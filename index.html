@@ -1313,7 +1313,7 @@
                 const validContainers = proc.containers.filter(c => c.numero !== '');
                 const countBadgeText = validContainers.length > 0 ? `${validContainers.length} Unid.` : 'Pendente';
                 
-                const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded-md shadow-sm">${escapeHtml(c.numero)}</span>`).join(' ');
+                const badges = validContainers.slice(0, 3).map(c => `<span class="bg-navy-900 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded-md shadow-sm">${escapeHtml(c.numero)}${c.tipo ? ' <span class="text-slate-500">· ' + escapeHtml(c.tipo) + '</span>' : ''}</span>`).join(' ');
                 const extraBadges = validContainers.length > 3 ? `<span class="text-xs text-slate-500 px-1">+${validContainers.length - 3}</span>` : '';
 
                 const draftInfo = getDraftDeadlineInfo(proc);
