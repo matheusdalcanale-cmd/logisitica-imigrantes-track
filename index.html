@@ -300,13 +300,16 @@
 
     <!-- PAINEL PRINCIPAL -->
     <main class="flex-1 flex flex-col h-full hidden min-w-0" id="main-panel">
-        <header class="bg-navy-800 shadow-md border-b border-slate-700 px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
+        <header class="bg-navy-800 shadow-md border-b border-slate-700 px-4 sm:px-8 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
                 <button id="btn-open-sidebar" onclick="openSidebarMobile()" title="Abrir menu" class="lg:hidden shrink-0 w-9 h-9 rounded-lg text-slate-400 hover:text-ink hover:bg-navy-900 transition flex items-center justify-center border border-slate-700"><i class="fas fa-bars text-sm"></i></button>
-                <div class="flex gap-4 sm:gap-8 overflow-x-auto">
-                    <button id="tab-import" class="shrink-0 text-sm font-bold text-blue-400 border-b-2 border-blue-400 pb-2 transition-colors">Importações Ativas</button>
-                    <button id="tab-export" class="shrink-0 text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors">Exportações Ativas</button>
-                    <button id="tab-archive" class="shrink-0 text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors">Arquivados</button>
+                <!-- No celular: 3 colunas iguais, sempre visíveis e clicáveis, sem
+                     precisar arrastar pra ver "Exportações"/"Arquivados". No
+                     desktop (sm+): volta a ser a fileira original, lado a lado. -->
+                <div class="grid grid-cols-3 gap-2 w-full sm:flex sm:w-auto sm:gap-8 sm:overflow-x-auto">
+                    <button id="tab-import" class="shrink-0 text-center sm:text-left text-sm font-bold text-blue-400 border-b-2 border-blue-400 pb-2 transition-colors"><span class="sm:hidden">Importação</span><span class="hidden sm:inline">Importações Ativas</span></button>
+                    <button id="tab-export" class="shrink-0 text-center sm:text-left text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors"><span class="sm:hidden">Exportação</span><span class="hidden sm:inline">Exportações Ativas</span></button>
+                    <button id="tab-archive" class="shrink-0 text-center sm:text-left text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors">Arquivados</button>
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -944,12 +947,16 @@
                 'archive': document.getElementById('tab-archive')
             };
             
-            Object.values(tabs).forEach(t => t.className = 'text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors');
+            // IMPORTANTE: manter "shrink-0 text-center sm:text-left" igual ao
+            // que já vem no HTML original — sem isso, no celular os botões
+            // perdiam o alinhamento certo depois do primeiro clique e a aba
+            // ficava difícil/impossível de tocar.
+            Object.values(tabs).forEach(t => t.className = 'shrink-0 text-center sm:text-left text-sm font-bold text-slate-500 hover:text-slate-300 border-b-2 border-transparent pb-2 transition-colors');
 
             if(tab === 'archive') {
-                tabs[tab].className = 'text-sm font-bold text-emerald-500 border-b-2 border-emerald-500 pb-2 transition-colors';
+                tabs[tab].className = 'shrink-0 text-center sm:text-left text-sm font-bold text-emerald-500 border-b-2 border-emerald-500 pb-2 transition-colors';
             } else {
-                tabs[tab].className = 'text-sm font-bold text-blue-400 border-b-2 border-blue-400 pb-2 transition-colors';
+                tabs[tab].className = 'shrink-0 text-center sm:text-left text-sm font-bold text-blue-400 border-b-2 border-blue-400 pb-2 transition-colors';
             }
             renderProcesses();
         };
