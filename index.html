@@ -304,6 +304,13 @@
                             <option value="">Selecione...</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Destino do Contêiner</label>
+                        <select id="f-finalizacao-vazio" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-navy-700 text-ink focus:border-blue-400 outline-none transition">
+                            <option value="devolucao">Devolução de Vazio</option>
+                            <option value="baixa">Baixa de Contêiner (sem devolução)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="border-t border-slate-700 pt-5 mt-5">
@@ -395,7 +402,7 @@
                         <h2 id="m-title" class="text-2xl font-bold text-ink tracking-tight"></h2>
                     </div>
                     <div class="flex items-start gap-2 mt-1">
-                        <p id="m-subtitle" class="text-sm text-slate-400"></p>
+                        <p id="m-subtitle" class="flex flex-wrap gap-1.5 items-center text-sm text-slate-400"></p>
                         <button id="btn-edit-header" onclick="toggleHeaderEdit()" title="Editar" class="text-slate-500 hover:text-blue-400 transition shrink-0 mt-0.5"><i class="fas fa-pen text-xs"></i></button>
                     </div>
                     <div id="m-header-edit" class="hidden mt-2 bg-navy-800 border border-slate-600 rounded-lg p-3 max-w-xl">
@@ -690,6 +697,18 @@
             { id: 'encerrar_mdfe', label: 'Encerrar MDFE', type: 'checkbox' },
             { id: 'ag_vazio', label: 'Agendamento de Vazio', type: 'datetime' }
         ];
+
+        // Quando o processo é "Baixa de Contêiner" (sem devolução ao terminal),
+        // a etapa de Agendamento de Vazio não se aplica — nem aparece no
+        // checklist, nem conta na barra de progresso ou no PDF. Processos
+        // antigos (sem o campo finalizacaoVazio) continuam se comportando como
+        // "Devolução de Vazio", que é o padrão.
+        const stepsChecklistImport = (proc) => {
+            if (proc && proc.finalizacaoVazio === 'baixa') {
+                return importChecklistSteps.filter(step => step.id !== 'ag_vazio');
+            }
+            return importChecklistSteps;
+        };
 
         // Monta um objeto de checklist "zerado" para um novo contêiner de importação.
         // Para cada etapa do tipo datetime, além do valor da data/hora, criamos um
@@ -1250,6 +1269,10 @@
                 processData.documentoNumero = document.getElementById('f-documento-numero').value;
                 processData.termCarga = document.getElementById('f-term-carga').value;
                 processData.termVazio = document.getElementById('f-term-vazio').value;
+                // 'devolucao' (padrão) = tem Agendamento de Vazio no checklist;
+                // 'baixa' = contêiner não volta pro terminal, então essa etapa
+                // do checklist nem aparece (ver importChecklistSteps mais abaixo).
+                processData.finalizacaoVazio = document.getElementById('f-finalizacao-vazio').value || 'devolucao';
             } else {
                 processData.exportador = document.getElementById('f-exportador').value;
                 processData.referencia = document.getElementById('f-referencia').value;
@@ -1436,7 +1459,7 @@
 
             if (proc.type === 'import') {
                 proc.containers.forEach(ct => {
-                    importChecklistSteps.forEach(step => {
+                    stepsChecklistImport(proc).forEach(step => {
                         total++;
                         if (step.type === 'checkbox') {
                             if (ct.checklist && ct.checklist[step.id] === 'true') done++;
@@ -1708,6 +1731,17 @@
             document.getElementById('process-modal').classList.remove('flex');
         };
 
+        // Monta os "chips" do cabeçalho do processo (rótulo + valor) em vez de
+        // uma frase corrida separada por barras — mais fácil de escanear, e
+        // mostra "—" no lugar de campos vazios (em vez de deixar o rótulo
+        // "pendurado" sem nada depois, como acontecia antes com "Vazio: ").
+        const renderHeaderChips = (pares) => {
+            return pares.map(({ label, value }) => `
+                <span class="inline-flex items-center gap-1 bg-navy-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-300">
+                    <span class="text-slate-500">${escapeHtml(label)}:</span> ${escapeHtml(value) || '—'}
+                </span>`).join('');
+        };
+
         // RENDERIZAR CONTEÚDO DO MODAL (INCLUI A LÓGICA DE EDIÇÃO DE CONTÊINER)
         const renderModalContent = (proc) => {
             const badge = document.getElementById('m-type-badge');
@@ -1721,11 +1755,25 @@
             badge.innerText = proc.type;
             if(proc.type === 'import') {
                 title.innerText = proc.importador || 'Processo de Importação';
-                const docLabel = proc.documentoTipo ? `${proc.documentoTipo}: ${proc.documentoNumero || ''}` : (proc.documento || '');
-                subtitle.innerText = `${docLabel ? docLabel + ' | ' : ''}Armador: ${proc.armador} | Carga: ${proc.termCarga} | Vazio: ${proc.termVazio}`;
+                const docChip = proc.documentoTipo
+                    ? { label: proc.documentoTipo, value: proc.documentoNumero }
+                    : (proc.documento ? { label: 'Documento', value: proc.documento } : null);
+                const destinoTexto = proc.finalizacaoVazio === 'baixa' ? 'Baixa de Contêiner' : 'Devolução de Vazio';
+                subtitle.innerHTML = renderHeaderChips([
+                    ...(docChip ? [docChip] : []),
+                    { label: 'Armador', value: proc.armador },
+                    { label: 'Carga', value: proc.termCarga },
+                    { label: 'Vazio', value: proc.termVazio },
+                    { label: 'Destino', value: destinoTexto }
+                ]);
             } else {
                 title.innerText = proc.exportador || 'Processo de Exportação';
-                subtitle.innerText = `Booking: ${proc.booking} | Ref: ${proc.referencia} | Navio: ${proc.navio} | Armador: ${proc.armador}`;
+                subtitle.innerHTML = renderHeaderChips([
+                    { label: 'Booking', value: proc.booking },
+                    { label: 'Ref', value: proc.referencia },
+                    { label: 'Navio', value: proc.navio },
+                    { label: 'Armador', value: proc.armador }
+                ]);
             }
 
             // Botão/formulário de edição dos dados do cabeçalho (Booking/Ref/Navio/
@@ -1763,6 +1811,13 @@
                     <div>
                         <label class="block text-[10px] uppercase text-slate-500 mb-1">Terminal de Vazio</label>
                         <select id="eh-term-vazio" onchange="handleTerminalSelectHeader(this, 'vazio')" class="w-full bg-navy-900 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">${buildTerminalOptions('vazio', proc.termVazio)}</select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase text-slate-500 mb-1">Destino do Contêiner</label>
+                        <select id="eh-finalizacao-vazio" class="w-full bg-navy-900 border border-slate-600 rounded-lg p-2 text-sm text-ink focus:border-blue-500 outline-none transition">
+                            <option value="devolucao" ${proc.finalizacaoVazio !== 'baixa' ? 'selected' : ''}>Devolução de Vazio</option>
+                            <option value="baixa" ${proc.finalizacaoVazio === 'baixa' ? 'selected' : ''}>Baixa de Contêiner (sem devolução)</option>
+                        </select>
                     </div>
                 </div>
                 <div class="flex justify-end gap-2 pt-3">
@@ -1893,7 +1948,7 @@
                 let ctBody = '';
                 if(proc.type === 'import') {
                     ctBody = `<div class="space-y-2">`;
-                    importChecklistSteps.forEach(step => {
+                    stepsChecklistImport(proc).forEach(step => {
                         const val = ct.checklist[step.id] || '';
                         if(step.type === 'checkbox') {
                             const isChecked = val === 'true';
@@ -2021,7 +2076,7 @@
             const cabecalho = [
                 'Tipo', 'Status', 'Armador', 'Motorista', 'Placas',
                 'Importador/Exportador', 'Documento/Booking', 'Referência', 'Navio',
-                'Terminal de Carregamento', 'Terminal de Vazio',
+                'Terminal de Carregamento', 'Terminal de Vazio', 'Destino do Contêiner',
                 'Contêineres', 'Qtd. Contêineres', 'Observações', 'Criado em'
             ];
 
@@ -2045,6 +2100,7 @@
                     proc.navio || '',
                     proc.type === 'import' ? (proc.termCarga || '') : '',
                     proc.type === 'import' ? (proc.termVazio || '') : '',
+                    proc.type === 'import' ? (proc.finalizacaoVazio === 'baixa' ? 'Baixa de Contêiner' : 'Devolução de Vazio') : '',
                     containersTexto,
                     containersValidos.length,
                     proc.observacoes || '',
@@ -2095,6 +2151,7 @@
                     <tr><td style="padding:4px 8px 4px 0; color:#666; width:140px;">Armador</td><td style="padding:4px 0; font-weight:bold;">${escapeHtml(proc.armador) || '—'}</td></tr>
                     <tr><td style="padding:4px 8px 4px 0; color:#666;">Motorista</td><td style="padding:4px 0;">${escapeHtml(proc.motorista) || '—'}</td></tr>
                     <tr><td style="padding:4px 8px 4px 0; color:#666;">Placas</td><td style="padding:4px 0;">${escapeHtml(proc.placas) || '—'}</td></tr>
+                    ${isImport ? `<tr><td style="padding:4px 8px 4px 0; color:#666;">Destino do Contêiner</td><td style="padding:4px 0;">${proc.finalizacaoVazio === 'baixa' ? 'Baixa de Contêiner (sem devolução)' : 'Devolução de Vazio'}</td></tr>` : ''}
                     ${proc.observacoes ? `<tr><td style="padding:4px 8px 4px 0; color:#666; vertical-align:top;">Observações</td><td style="padding:4px 0;">${escapeHtml(proc.observacoes)}</td></tr>` : ''}
                 </table>
             `;
@@ -2109,7 +2166,7 @@
 
                 html += `<table style="width:100%; border-collapse:collapse; font-size:11px;">`;
                 if (isImport) {
-                    importChecklistSteps.forEach(step => {
+                    stepsChecklistImport(proc).forEach(step => {
                         if (step.type === 'checkbox') {
                             const feito = ct.checklist && ct.checklist[step.id] === 'true';
                             html += `<tr><td style="padding:3px 0; width:20px;">${feito ? '&#9989;' : '&#9744;'}</td><td style="padding:3px 0;">${escapeHtml(step.label)}</td></tr>`;
@@ -2204,6 +2261,7 @@
                 updates.armador = document.getElementById('eh-armador').value;
                 updates.termCarga = document.getElementById('eh-term-carga').value;
                 updates.termVazio = document.getElementById('eh-term-vazio').value;
+                updates.finalizacaoVazio = document.getElementById('eh-finalizacao-vazio').value;
             } else {
                 updates.booking = document.getElementById('eh-booking').value;
                 updates.referencia = document.getElementById('eh-referencia').value;
