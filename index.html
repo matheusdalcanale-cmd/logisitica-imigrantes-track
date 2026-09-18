@@ -368,10 +368,15 @@
                     <div id="resumo-atraso" class="text-xl sm:text-2xl font-bold text-ink">0</div>
                 </div>
             </div>
-            <div class="relative mb-4">
-                <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                <input type="text" id="search-processos" placeholder="Buscar por armador, motorista, placa, documento/booking ou nº do contêiner..." oninput="filterProcesses(this.value)" class="w-full pl-9 pr-9 py-2.5 text-sm border border-slate-600 rounded-lg bg-navy-800 text-ink focus:border-blue-500 outline-none transition">
-                <button type="button" id="btn-clear-search" onclick="clearSearch()" title="Limpar busca" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-ink w-5 h-5 items-center justify-center rounded-full hover:bg-navy-700 transition"><i class="fas fa-xmark text-xs"></i></button>
+            <div class="flex gap-2 mb-4">
+                <div class="relative flex-1">
+                    <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="search-processos" placeholder="Buscar por armador, motorista, placa, documento/booking ou nº do contêiner..." oninput="filterProcesses(this.value)" class="w-full pl-9 pr-9 py-2.5 text-sm border border-slate-600 rounded-lg bg-navy-800 text-ink focus:border-blue-500 outline-none transition">
+                    <button type="button" id="btn-clear-search" onclick="clearSearch()" title="Limpar busca" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-ink w-5 h-5 items-center justify-center rounded-full hover:bg-navy-700 transition"><i class="fas fa-xmark text-xs"></i></button>
+                </div>
+                <button type="button" onclick="exportarProcessosCSV()" title="Exportar esta lista (aba + busca atuais) para Excel/CSV" class="shrink-0 px-3.5 py-2.5 text-sm font-semibold text-slate-300 hover:text-ink bg-navy-800 hover:bg-navy-700 border border-slate-700 rounded-lg transition flex items-center gap-2">
+                    <i class="fas fa-file-export"></i><span class="hidden sm:inline">Exportar</span>
+                </button>
             </div>
             <div id="processes-container" class="space-y-3.5">
                 <!-- Cartões de processos -->
@@ -1967,6 +1972,101 @@
             btnDelete.onclick = () => deleteProcess(proc.id);
 
             document.getElementById('btn-export-pdf').onclick = () => exportProcessoPDF(proc.id);
+        };
+
+        // EXPORTAÇÃO EM LOTE (CSV): exporta os processos atualmente visíveis
+        // na tela — respeita a aba selecionada (Importações/Exportações/
+        // Arquivados) e o texto da busca rápida, exatamente como o que já
+        // aparece na lista. Gera um arquivo .csv que abre direto no Excel ou
+        // Planilhas Google, sem precisar de nenhuma biblioteca externa.
+        const getProcessosVisiveisParaExportar = () => {
+            let filtered = processes.filter(p => {
+                if (currentActiveTab === 'archive') return p.status === 'archived';
+                if (currentActiveTab === 'import') return p.status === 'active' && p.type === 'import';
+                if (currentActiveTab === 'export') return p.status === 'active' && p.type === 'export';
+                return false;
+            });
+            if (searchQuery) {
+                filtered = filtered.filter(proc => {
+                    const campos = [
+                        proc.armador, proc.motorista, proc.placas,
+                        proc.importador, proc.exportador,
+                        proc.documentoNumero, proc.documento, proc.booking, proc.referencia, proc.navio,
+                        proc.observacoes,
+                        ...(proc.containers || []).map(c => c.numero)
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    return campos.includes(searchQuery);
+                });
+            }
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            return filtered;
+        };
+
+        // Prepara um valor para entrar numa célula do CSV: usa ; como
+        // separador (padrão do Excel em português, já que a vírgula ali é o
+        // separador decimal) e envolve em aspas quando o texto tiver ponto e
+        // vírgula, aspas ou quebra de linha.
+        const csvCell = (valor) => {
+            const texto = (valor === null || valor === undefined) ? '' : String(valor);
+            return /[;"\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+        };
+
+        window.exportarProcessosCSV = () => {
+            const lista = getProcessosVisiveisParaExportar();
+            if (!lista.length) {
+                showToast('Não há processos nesta lista para exportar.', 'error');
+                return;
+            }
+
+            const cabecalho = [
+                'Tipo', 'Status', 'Armador', 'Motorista', 'Placas',
+                'Importador/Exportador', 'Documento/Booking', 'Referência', 'Navio',
+                'Terminal de Carregamento', 'Terminal de Vazio',
+                'Contêineres', 'Qtd. Contêineres', 'Observações', 'Criado em'
+            ];
+
+            const linhas = lista.map(proc => {
+                const documento = proc.type === 'import'
+                    ? [proc.documentoTipo, proc.documentoNumero].filter(Boolean).join(' ')
+                    : (proc.booking || '');
+                const containersValidos = (proc.containers || []).filter(c => c.numero);
+                const containersTexto = containersValidos
+                    .map(c => c.tipo ? `${c.numero} (${c.tipo})` : c.numero)
+                    .join(' | ');
+                return [
+                    proc.type === 'import' ? 'Importação' : 'Exportação',
+                    proc.status === 'archived' ? 'Arquivado' : 'Ativo',
+                    proc.armador || '',
+                    proc.motorista || '',
+                    proc.placas || '',
+                    proc.type === 'import' ? (proc.importador || '') : (proc.exportador || ''),
+                    documento,
+                    proc.referencia || '',
+                    proc.navio || '',
+                    proc.type === 'import' ? (proc.termCarga || '') : '',
+                    proc.type === 'import' ? (proc.termVazio || '') : '',
+                    containersTexto,
+                    containersValidos.length,
+                    proc.observacoes || '',
+                    formatarDataHora(proc.createdAt)
+                ].map(csvCell).join(';');
+            });
+
+            // BOM no início (﻿) faz o Excel em português reconhecer o
+            // arquivo como UTF-8 e mostrar os acentos corretamente.
+            const conteudo = '﻿' + [cabecalho.join(';'), ...linhas].join('\r\n');
+            const blob = new Blob([conteudo], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const nomeAba = currentActiveTab === 'archive' ? 'arquivados' : (currentActiveTab === 'import' ? 'importacoes' : 'exportacoes');
+            const dataHoje = new Date().toISOString().slice(0, 10);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logitrack-${nomeAba}-${dataHoje}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`${lista.length} processo(s) exportado(s).`);
         };
 
         // EXPORTAR PROCESSO EM PDF
