@@ -15,7 +15,7 @@
 // nenhuma). Com isso corrigido, depois da primeira visita online o app fica
 // visualmente utilizável mesmo offline.
 
-const CACHE_NAME = 'logitrack-shell-v2';
+const CACHE_NAME = 'logitrack-shell-v3';
 
 const APP_SHELL = [
     './',
