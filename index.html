@@ -340,6 +340,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+                <button id="btn-manage-registries" onclick="openRegistriesModal()" title="Gerenciar Cadastros" class="w-9 h-9 rounded-full text-slate-400 hover:text-ink hover:bg-navy-900 transition flex items-center justify-center border border-slate-700">
+                    <i class="fas fa-gear text-sm"></i>
+                </button>
                 <button id="btn-toggle-theme" onclick="toggleTheme()" title="Alternar modo claro/escuro" class="w-9 h-9 rounded-full text-slate-400 hover:text-ink hover:bg-navy-900 transition flex items-center justify-center border border-slate-700">
                     <i class="fas fa-moon text-sm"></i>
                 </button>
@@ -412,6 +415,27 @@
                     <button id="btn-unarchive-process" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-lg shadow-blue-900/30 hover:bg-blue-500 transition hidden"><i class="fas fa-box-open mr-2"></i> Desarquivar Processo</button>
                     <button id="btn-archive-process" class="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-lg shadow-emerald-900/30 hover:bg-emerald-500 transition hidden"><i class="fas fa-check-double mr-2"></i> Arquivar Processo</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GERENCIAR CADASTROS (editar/excluir terminais, armador, tipo
+         de contêiner — as mesmas listas compartilhadas usadas nos selects). -->
+    <div id="registries-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-navy-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col border border-slate-700 overflow-hidden">
+            <div class="flex justify-between items-center px-5 py-4 border-b border-slate-700 shrink-0">
+                <h2 class="text-base font-bold text-ink flex items-center gap-2"><i class="fas fa-list-check text-blue-400"></i> Gerenciar Cadastros</h2>
+                <button onclick="closeRegistriesModal()" title="Fechar" class="w-9 h-9 rounded-full text-slate-500 hover:text-ink hover:bg-navy-700 text-xl transition flex items-center justify-center">&times;</button>
+            </div>
+            <div class="flex gap-1.5 px-5 pt-4 shrink-0 overflow-x-auto custom-scrollbar">
+                <button class="registry-tab-btn shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 transition" data-cat="cheio" onclick="switchRegistryTab('cheio')">Term. Carregamento</button>
+                <button class="registry-tab-btn shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 transition" data-cat="vazio" onclick="switchRegistryTab('vazio')">Term. Vazio</button>
+                <button class="registry-tab-btn shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 transition" data-cat="armador" onclick="switchRegistryTab('armador')">Armador</button>
+                <button class="registry-tab-btn shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md text-slate-400 transition" data-cat="tipo" onclick="switchRegistryTab('tipo')">Tipo Contêiner</button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1 custom-scrollbar" id="registries-list-container"></div>
+            <div class="p-5 pt-3 border-t border-slate-700 shrink-0">
+                <button onclick="adicionarItemCadastroAtual()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-500 active:scale-[0.99] transition text-sm"><i class="fas fa-plus mr-1.5"></i>Adicionar novo</button>
             </div>
         </div>
     </div>
@@ -719,6 +743,7 @@
                     const proc = processes.find(p => p.id === currentViewingProcessId);
                     if (proc) renderModalContent(proc);
                 }
+                renderRegistryList();
             });
         };
 
@@ -797,6 +822,11 @@
                 const data = snap.exists() ? snap.data() : {};
                 armadoresCadastrados = data.lista || [];
                 renderArmadorSelectInSidebar();
+                if (currentViewingProcessId) {
+                    const proc = processes.find(p => p.id === currentViewingProcessId);
+                    if (proc) renderModalContent(proc);
+                }
+                renderRegistryList();
             });
         };
 
@@ -863,6 +893,7 @@
                     const proc = processes.find(p => p.id === currentViewingProcessId);
                     if (proc) renderModalContent(proc);
                 }
+                renderRegistryList();
             });
         };
 
@@ -904,6 +935,114 @@
                 }
             } else {
                 await updateField(procId, ctId, 'tipo', selectEl.value);
+            }
+        };
+
+        // GERENCIAR CADASTROS (editar/excluir itens das listas compartilhadas
+        // de terminais, armador e tipo de contêiner). Reaproveita as mesmas
+        // funções "adicionarNovoX" já existentes para a parte de adicionar, e
+        // usa o índice do item na lista (nunca o texto digitado) nos botões
+        // de editar/excluir, evitando qualquer problema com aspas/HTML no nome.
+        const REGISTRY_CONFIG = {
+            cheio:   { label: 'Terminal de Carregamento', ref: () => doc(db, 'config', 'terminals'), field: 'cheio', getList: () => terminaisCadastrados.cheio || [] },
+            vazio:   { label: 'Terminal de Vazio',        ref: () => doc(db, 'config', 'terminals'), field: 'vazio', getList: () => terminaisCadastrados.vazio || [] },
+            armador: { label: 'Armador',                  ref: () => doc(db, 'config', 'armadores'), field: 'lista', getList: () => armadoresCadastrados || [] },
+            tipo:    { label: 'Tipo de Contêiner',        ref: () => doc(db, 'config', 'tipos'),     field: 'lista', getList: () => tiposCadastrados || [] }
+        };
+        let currentRegistryTab = 'cheio';
+
+        const writeRegistryList = async (cat, novaLista) => {
+            const cfg = REGISTRY_CONFIG[cat];
+            await setDoc(cfg.ref(), { [cfg.field]: novaLista }, { merge: true });
+        };
+
+        window.openRegistriesModal = () => {
+            document.getElementById('registries-modal').classList.remove('hidden');
+            document.getElementById('registries-modal').classList.add('flex');
+            renderRegistryList();
+        };
+        window.closeRegistriesModal = () => {
+            document.getElementById('registries-modal').classList.add('hidden');
+            document.getElementById('registries-modal').classList.remove('flex');
+        };
+        window.switchRegistryTab = (cat) => {
+            currentRegistryTab = cat;
+            renderRegistryList();
+        };
+
+        // Redesenha a lista de itens da categoria selecionada, com botões de
+        // editar/excluir. Chamada tanto ao abrir/trocar de aba quanto sempre
+        // que a lista muda em tempo real (via onSnapshot), pra refletir
+        // edições feitas por outra pessoa da equipe enquanto o modal está aberto.
+        const renderRegistryList = () => {
+            const modal = document.getElementById('registries-modal');
+            const container = document.getElementById('registries-list-container');
+            if (!modal || !container || modal.classList.contains('hidden')) return;
+
+            document.querySelectorAll('.registry-tab-btn').forEach(btn => {
+                const ativo = btn.dataset.cat === currentRegistryTab;
+                btn.classList.toggle('bg-blue-600', ativo);
+                btn.classList.toggle('text-white', ativo);
+                btn.classList.toggle('text-slate-400', !ativo);
+            });
+
+            const cfg = REGISTRY_CONFIG[currentRegistryTab];
+            const lista = cfg.getList();
+            if (!lista.length) {
+                container.innerHTML = `<p class="text-sm text-slate-500 text-center py-6">Nenhum item cadastrado ainda em "${escapeHtml(cfg.label)}".</p>`;
+                return;
+            }
+            const linhas = lista.map((nome, idx) => `
+                <div class="flex items-center justify-between gap-2 bg-navy-900 border border-slate-700 rounded-lg px-3 py-2">
+                    <span class="text-sm text-ink truncate">${escapeHtml(nome)}</span>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="editarItemCadastro('${currentRegistryTab}', ${idx})" title="Editar" class="w-7 h-7 rounded-md text-slate-400 hover:text-blue-400 hover:bg-navy-700 text-xs transition flex items-center justify-center"><i class="fas fa-pen"></i></button>
+                        <button onclick="excluirItemCadastro('${currentRegistryTab}', ${idx})" title="Excluir" class="w-7 h-7 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-900/20 text-xs transition flex items-center justify-center"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`).join('');
+            container.innerHTML = `
+                <p class="text-[11px] text-slate-500 mb-3 leading-relaxed">Editar ou excluir aqui não altera processos já criados com o valor anterior — eles continuam mostrando o nome antigo, sinalizado como "não cadastrado".</p>
+                <div class="space-y-1.5">${linhas}</div>`;
+        };
+
+        window.editarItemCadastro = async (cat, idx) => {
+            const cfg = REGISTRY_CONFIG[cat];
+            const lista = cfg.getList();
+            const nomeAntigo = lista[idx];
+            if (nomeAntigo === undefined) return;
+            const novoNomeRaw = prompt(`Editar "${nomeAntigo}":`, nomeAntigo);
+            if (novoNomeRaw === null) return; // cancelado
+            const novoNome = novoNomeRaw.trim().slice(0, 150);
+            if (!novoNome) { showToast('O nome não pode ficar em branco.', 'error'); return; }
+            if (novoNome === nomeAntigo) return;
+            if (lista.includes(novoNome)) { showToast(`Já existe um item chamado "${novoNome}".`, 'error'); return; }
+            const novaLista = lista.map((n, i) => i === idx ? novoNome : n).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            await writeRegistryList(cat, novaLista);
+            showToast(`"${nomeAntigo}" renomeado para "${novoNome}".`);
+            renderRegistryList();
+        };
+
+        window.excluirItemCadastro = async (cat, idx) => {
+            const cfg = REGISTRY_CONFIG[cat];
+            const lista = cfg.getList();
+            const nome = lista[idx];
+            if (nome === undefined) return;
+            if (!confirm(`Tem certeza que deseja excluir "${nome}" da lista de ${cfg.label}?`)) return;
+            const novaLista = lista.filter((_, i) => i !== idx);
+            await writeRegistryList(cat, novaLista);
+            showToast(`"${nome}" excluído.`);
+            renderRegistryList();
+        };
+
+        window.adicionarItemCadastroAtual = async () => {
+            let novoNome = null;
+            if (currentRegistryTab === 'cheio') novoNome = await window.adicionarNovoTerminal('cheio');
+            else if (currentRegistryTab === 'vazio') novoNome = await window.adicionarNovoTerminal('vazio');
+            else if (currentRegistryTab === 'armador') novoNome = await window.adicionarNovoArmador();
+            else if (currentRegistryTab === 'tipo') novoNome = await window.adicionarNovoTipo();
+            if (novoNome) {
+                showToast(`"${novoNome}" adicionado.`);
+                renderRegistryList();
             }
         };
 
@@ -1140,6 +1279,34 @@
                 }
                 processData.containers.push(ct);
             });
+
+            // VERIFICAÇÃO DE DUPLICIDADE: avisa (sem bloquear, pois pode ser
+            // intencional) quando o número de contêiner, o documento (DI/DTA/
+            // DUIMP) ou o booking já aparecem em outro processo ativo. A
+            // checagem só enxerga os processos do próprio usuário logado, que
+            // é o mesmo recorte que as regras de segurança do Firestore já
+            // permitem ler.
+            const numerosNovos = processData.containers.map(c => c.numero).filter(Boolean);
+            const processosAtivos = processes.filter(p => p.status !== 'archived');
+            const containerDuplicado = numerosNovos.find(numero =>
+                processosAtivos.some(p => (p.containers || []).some(c => c.numero === numero))
+            );
+            let documentoDuplicado = null;
+            if (type === 'import' && processData.documentoNumero) {
+                const existeDoc = processosAtivos.some(p => p.type === 'import' && p.documentoNumero === processData.documentoNumero);
+                if (existeDoc) documentoDuplicado = `o número de documento "${processData.documentoNumero}"`;
+            } else if (type === 'export' && processData.booking) {
+                const existeBooking = processosAtivos.some(p => p.type === 'export' && p.booking === processData.booking);
+                if (existeBooking) documentoDuplicado = `o número de booking "${processData.booking}"`;
+            }
+            if (containerDuplicado || documentoDuplicado) {
+                const motivos = [];
+                if (containerDuplicado) motivos.push(`o número de contêiner "${containerDuplicado}"`);
+                if (documentoDuplicado) motivos.push(documentoDuplicado);
+                if (!confirm(`Já existe um processo ativo usando ${motivos.join(' e ')}. Deseja criar mesmo assim?`)) {
+                    return;
+                }
+            }
 
             try {
                 await addDoc(collection(db, "processes"), processData);
@@ -1884,6 +2051,21 @@
         window.updateField = async (procId, ctId, field, value) => {
             const proc = processes.find(p => p.id === procId);
             const ctIndex = proc.containers.findIndex(c => c.id === ctId);
+
+            // Mesma verificação de duplicidade de número de contêiner aplicada
+            // na criação do processo, agora também na edição de um contêiner
+            // já existente (ex: copiar/colar da placa errada por engano).
+            if (field === 'numero' && value) {
+                const duplicado = processes.some(p =>
+                    p.status !== 'archived' &&
+                    (p.containers || []).some(c => c.numero === value && !(p.id === procId && c.id === ctId))
+                );
+                if (duplicado && !confirm(`Já existe outro processo ativo usando o número de contêiner "${value}". Deseja salvar mesmo assim?`)) {
+                    renderModalContent(proc); // desfaz a digitação na tela, voltando pro valor salvo
+                    return;
+                }
+            }
+
             const ref = doc(db, "processes", procId);
             proc.containers[ctIndex][field] = value;
             await updateDoc(ref, { containers: proc.containers });
